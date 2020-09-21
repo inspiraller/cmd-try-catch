@@ -89,3 +89,6 @@ const isComplete = await sync([
 
 # You can supply cmd, or functions.
 The beauty of this approach is its self evident of expected steps.
+
+# Note: This is a working example
+- coverage tests not complete yet
