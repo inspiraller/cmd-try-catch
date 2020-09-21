@@ -1,0 +1,6 @@
+projectKey=cmd-try-catch
+serverUrl=http://localhost:9000
+serverVersion=7.1.0.11001
+dashboardUrl=http://localhost:9000/dashboard/index/cmd-try-catch
+ceTaskId=AXSwL8VXYOO20IQAFViq
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AXSwL8VXYOO20IQAFViq
