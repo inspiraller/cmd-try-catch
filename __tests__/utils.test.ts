@@ -67,6 +67,17 @@ describe('utils', () => {
           expect(success).toBe(false);
         });
     });
+    it('should run fail cmd if no objCMD', async () => {
+      let success: boolean = false;
+      await process(undefined)
+        .then(() => {
+          success = true;
+        })
+        .catch(err => {
+          success = false;
+          expect(success).toBe(false);
+        });
+    });
   });
 
   describe('getPosOfLen', () => {
@@ -88,18 +99,30 @@ describe('utils', () => {
     });
   });
 
-  // describe('catchProcess', async () => {
-  //   it('should run through all catch statements and return true', () => {
-  //     const arrNext: IObjCMD[] = [{ cmd: 'do thing'}, {cmd: 'do thing'}];
-  //     const arrCatch: IObjCMD[] = [{ cmd: 'do catch thing 1'}, {cmd: 'do catch thing 2', {cmd: 'do catch thing 3' }];
-  //     const intNextLen: number = arrNext.length;
-  //     const intCatchLen: number = arrCatch.length;
+  describe('catchProcess', () => {
+    it('should run through all catch statements and return "then" method successfullly', async () => {
+      const arrNext: IObjCMD[] = [{ cmd: 'do thing'}, {cmd: 'do thing'}];
+      const arrCatch: IObjCMD[] = [{ cmd: 'do catch thing 1'}, {cmd: 'do catch thing 2'}, {cmd: 'do catch thing 3' }];
+      const intNextLen: number = arrNext.length;
+      const intCatchLen: number = arrCatch.length;
 
-  //     await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen).then(() => {
-  //       expect(true).toBe(true)
-  //     }).catch(err => {
-  //       expect(true).toBe(false);
-  //     });
-  //   });
-  // });
+      await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen).then(() => {
+        expect(true).toBe(true);
+      }).catch(err => {
+        expect(true).toBe(false);
+      });
+    });
+    it('should fail catch if no arrCatch exists', async () => {
+      const arrNext: IObjCMD[] = [{ cmd: 'do thing'}, {cmd: 'do thing'}];
+      const arrCatch: IObjCMD[] = [];
+      const intNextLen: number = arrNext.length;
+      const intCatchLen: number = arrCatch.length;
+
+      await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen).then(() => {
+        expect(true).toBe(false);
+      }).catch(err => {
+        expect(true).toBe(true);
+      });
+    });
+  });
 });
