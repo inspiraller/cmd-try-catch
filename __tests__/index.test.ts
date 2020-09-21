@@ -76,7 +76,6 @@ describe('index', () => {
           ]
         }
       ]);
-      console.log('isComplete = ', isComplete);
     });
   
     it('should try - experimentEcho1', () => {
