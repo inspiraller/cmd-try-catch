@@ -1,17 +1,17 @@
-const { spawn, exec } = require('child_process');
-const chalk = require('chalk');
-const fs = require('fs');
-const path = require('path');
+import { exec, ExecOptions, ExecException } from 'child_process';
+import chalk, { Color } from 'chalk';
 
-const defaultOptions = {
-  stdio: 'inherit',
-  shell: true,
-  cwd: './'
-};
+type TError = ExecException | null;
+type TSTDOut = string | Buffer;
 
-const print = msg => console.info(msg);
+export type TProcessResponseFunc = (error: TError, stdout: TSTDOut, stderr: TSTDOut) => void;
 
-const defaultHandle = (msg, resolve, reject) => (error, stdout, stderr) => {
+type TProcessPromiseHandler = (
+  resolve: (value: TSTDOut) => void,
+  reject: (value: TError) => void
+) => TProcessResponseFunc;
+
+const processPromiseHandler: TProcessPromiseHandler = (resolve, reject) => (error, stdout, stderr) => {
   // print(chalk.grey(` - ${msg}`));
   if (error) {
     print(chalk.grey(error));
@@ -22,31 +22,54 @@ const defaultHandle = (msg, resolve, reject) => (error, stdout, stderr) => {
   }
 };
 
-const process = (objCMD, isSpawn = false) => {
-  const { cmd, msg } = objCMD;
+interface IObjCMD {
+  msg?: string;
+  cmd?: string;
+  func?: (fn: TProcessResponseFunc) => void;
+  catch?: IObjCMD[];
+}
+
+type TSync = (
+  arrNext: IObjCMD[],
+  intNextLen?: number,
+  arrCatch?: IObjCMD[],
+  intCatchLen?: number
+) => Promise<boolean>;
+
+type TProcess = (objCMD?: IObjCMD, isSpawn?: boolean) => Promise<TSTDOut>;
+
+const defaultExecOptions: ExecOptions = {
+  shell: 'process.env.ComSpec', // from options in exec, or /bin/sh in unix
+  cwd: './'
+};
+
+const print = (msg: string, color?: typeof Color) => {
+  console.log(color ? chalk[color](msg) : msg);
+};
+
+const process: TProcess = (objCMD, isSpawn = false) => {
+  if (!objCMD) {
+    print('no objCMD supplied to process');
+    return new Promise(resolve => resolve(''));
+  }
+  const { cmd } = objCMD;
   return new Promise((resolve, reject) => {
     if (objCMD.func) {
-      return objCMD.func(defaultHandle(msg, resolve, reject));
+      return objCMD.func(processPromiseHandler(resolve, reject));
     }
-    return isSpawn
-      ? spawn(cmd, defaultOptions, defaultHandle(msg, resolve, reject))
-      : exec(cmd, defaultOptions, defaultHandle(msg, resolve, reject));
+    return exec(cmd as string, defaultExecOptions, processPromiseHandler(resolve, reject));
   });
 };
 
-const removeDockerMachine = async () => {
-  const removed = await process('docker-machine rm -f default', 'remove docker-machine');
-  return removed;
-};
+let syncCatch: TSync;
+let sync: TSync;
+let catchProcess: TSync;
 
-let syncCatch = async () => null;
-let sync = async () => null;
+const getPosOfLen = (arr: IObjCMD[], len: number) => `${len - (arr.length - 1)}`;
 
-const getPosOfLen = (arr, len) => `${len - (arr.length - 1)}`;
-
-const printTryCatch = (isTry, arr, len, msg) => {
+const printTryCatch = (isTry: boolean, arr: IObjCMD[], len: number, msg: string) => {
   const intPos = getPosOfLen(arr, len);
-  const prefix = isTry ? 'Try: ' : 'Catch: ';
+  // const prefix: TPrefix = isTry ? 'Try: ' : 'Catch: ';
   const separator = isTry ? '                                                  ' : '';
   const color = isTry ? 'cyan' : 'cyan';
 
@@ -59,278 +82,70 @@ const printTryCatch = (isTry, arr, len, msg) => {
   }
 };
 
-const catchMe = async (arrNext, intNextLen, arrCatch, intCatchLen, from) => {
+catchProcess = async (arrNext, intNextLen, arrCatch, intCatchLen) => {
   if (arrCatch && arrCatch.length) {
     const handleCatch = await syncCatch(arrNext, intNextLen, arrCatch, intCatchLen);
     return handleCatch;
   }
   print(chalk.bgRed(' ! Cannot continue ! no more catches'));
-  return null;
+  return false;
+};
+type TGetMsg = (objCMD: IObjCMD) => string;
+
+const getMsg: TGetMsg = objCMD => {
+  const { msg, cmd, func } = objCMD;
+  const strMsg: string = msg || cmd || (func && func.name) || '';
+  return strMsg;
 };
 
-sync = async (arrNext, intNextleng = null) => {
-  const intNextLen = intNextleng || arrNext.length;
-  const { msg, cmd, func } = arrNext[0];
-  const strMsg = msg || cmd || func.name;
+sync = async (arrNext, intNextleng = 0) => {
+  const intNextLen = intNextleng !== 0 ? intNextleng : arrNext.length;
+  const strMsg = getMsg(arrNext[0]);
 
   printTryCatch(true, arrNext, intNextLen, strMsg);
 
   const objCMD = arrNext.shift();
+  if (!objCMD) {
+    console.warn('Array has no objCMD');
+    return false;
+  }
   const arrCatch = objCMD.catch;
   const intCatchLen = (arrCatch && arrCatch.length) || 0;
-  await process(objCMD)
+  const tryAll = await process(objCMD)
     .then(async () => {
       if (arrNext.length) {
         const next = await sync(arrNext, intNextLen);
         return next;
       }
-      return null;
+      return true;
     })
     .catch(async () => {
-      await catchMe(arrNext, intNextLen, arrCatch, intCatchLen, 'sync');
-      if (arrNext && arrNext.length) {
-        const next = await sync(arrNext, intNextLen);
-        return next;
+      const catchAll = await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen);
+      if(catchAll) {
+        if (arrNext && arrNext.length) {
+          const next = await sync(arrNext, intNextLen);
+          return next;
+        }
+        return true;
       }
-      return null;
+      return false;
     });
+  return tryAll;
 };
 
 syncCatch = async (arrNext, intNextLen, arrCatch, intCatchLen) => {
-  const { msg, cmd, func } = arrCatch[0];
-  const strMsg = msg || cmd || func.name;
-  printTryCatch(false, arrCatch, intCatchLen, strMsg);
-
+  if (!arrCatch) {
+    print('arrCatch was not supplied to syncCatch');
+    return false;
+  }
+  const strMsg = getMsg(arrCatch[0]);
+  printTryCatch(false, arrCatch, intCatchLen || 0, strMsg);
   const objCMD = arrCatch.shift();
-
-  await process(objCMD)
-    // .then(async () => {
-    //   if (arrNext.length) {
-    //     // console.log(' £ Catch past. Moving onto next cmd');
-    //     const next = await sync(arrNext, intNextLen);
-    //     return next;
-    //   }
-    //   // console.log(' £ Catch past. End of next cmd');
-    //   return null;
-    // })
-    .catch(async () => {
-      await catchMe(arrNext, intNextLen, arrCatch, intCatchLen, 'syncCatch');
-    });
+  const catchAll = await process(objCMD).then(() => true).catch(async () => {
+    const catchEach = await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen);
+    return catchEach;
+  });
+  return catchAll;
 };
 
-// const createDockerMachine = async () => {
-//   print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
-//   print('start scripts - docker - mongo, mongo-express, graphql');
-
-//   await sync([
-//     {
-//       msg: 'is - docker machine default exists',
-//       cmd: `docker-machine active`,
-//       catch: [
-//         {
-//           msg: 'enable - docker shell commands',
-//           cmd: `@FOR /f "tokens=*" %i IN ('docker-machine env --shell cmd default') DO @%i`
-//         },
-//         {
-//           msg: 'create - dockar-machine default',
-//           cmd: 'docker-machine create -d virtualbox --virtualbox-share-folder "c:\\:/c" default'
-//         }
-//       ]
-//     },
-//     {
-//       msg: 'enable - docker shell commands',
-//       cmd: `@FOR /f "tokens=*" %i IN ('docker-machine env --shell cmd default') DO @%i`
-//     }
-//   ]);
-
-//   print(`End scripts`);
-//   print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
-// };
-
-// spawn(cmd, defaultOptions, defaultHandle(msg, resolve, reject))
-
-const experimentEcho1 = handle => {
-  const error = 'mock error experimentEcho1';
-  const stdout = 'experimentEcho1';
-  const stderr = null;
-  setTimeout(() => {
-    handle(error, stdout, stderr);
-  }, 2000);
-};
-
-const experimentEcho2 = handle => {
-  const error = 'mock error experimentEcho2';
-  const stdout = null;
-  const stderr = null;
-  handle(error, stdout, stderr);
-};
-
-const experimentEcho3 = handle => {
-  const error = false;
-  const stdout = 'success';
-  const stderr = null;
-  handle(error, stdout, stderr);
-};
-
-const experimentEcho4 = handle => {
-  const error = false;
-  const stdout = 'success';
-  const stderr = null;
-  handle(error, stdout, stderr);
-};
-
-const experimentEcho5 = handle => {
-  const error = 'echo 5 fails';
-  const stdout = null;
-  const stderr = null;
-  handle(error, stdout, stderr);
-};
-
-const experimentEcho6 = handle => {
-  const error = false;
-  const stdout = null;
-  const stderr = null;
-  handle(error, stdout, stderr);
-};
-
-const createDockerMachine = async () => {
-  print(chalk.cyan('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^'));
-  print(chalk.cyan('start scripts - mock test'));
-
-  await sync([
-    {
-      func: experimentEcho1,
-      catch: [
-        {
-          func: experimentEcho2
-        },
-        {
-          func: experimentEcho3
-        },
-        {
-          func: experimentEcho4
-        }
-      ]
-    },
-    {
-      func: experimentEcho5,
-      catch: [
-        {
-          func: experimentEcho6
-        }
-      ]
-    }
-  ]);
-
-  print(chalk.cyan(`End scripts`));
-  print(chalk.cyan('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^'));
-};
-
-createDockerMachine().then(() => {
-  console.log('finished!');
-});
-
-// {
-//   cmd: 'docker-machine rm -f default',
-//   msg: 'remove docker-machine'
-// }
-// ####################################################################################
-// const argv = process.argv.reduce((acc, cur) => {
-//   const vars = cur.split('=');
-//   if (vars.length > 1) {
-//     acc[vars[0].replace(/^\-\-/, '')] = vars[1];
-//   }
-//   return acc;
-// }, {});
-
-// const spawns = init([
-//   () => {
-//     createDockerMachine();
-//   }
-// ]);
-
-// const cmd = (objCMD, fnExit = () => {}) => {
-//   const { cmds, newWindow } = objCMD;
-//   const cwd = objCMD.cwd || './';
-//   console.log(`# Start: cmd ${cmds}`);
-
-//   const spawnItem = newWindow
-//     ? exec(cmds, {
-//         stdio: 'inherit',
-//         shell: true,
-//         cwd
-//       })
-//     : spawn(cmds, {
-//         stdio: 'inherit',
-//         shell: true,
-//         cwd
-//       });
-
-//   spawnItem.on('exit', (code, signal) => {
-//     console.log(`= End: cmd ${cmds}`);
-//     fnExit();
-//   });
-
-//   spawnItem.on('error', err => {
-//     console.log('! Error: ', err);
-//   });
-//   return spawnItem;
-// };
-
-// const cmdIterate = async (arrSpawnList, fnEnd = () => {}) => {
-//   if (arrSpawnList.length) {
-//     const objCMD = arrSpawnList.shift();
-//     if (typeof objCMD === 'function') {
-//       const fnName = objCMD.name;
-//       console.log(`# Start: function ${fnName}`);
-//       await objCMD();
-//       cmdIterate(arrSpawnList, fnEnd);
-//       console.log(`- End : function ${fnName}`);
-//     } else {
-//       return cmd(objCMD, () => cmdIterate(arrSpawnList, fnEnd));
-//     }
-//   } else {
-//     fnEnd();
-//   }
-// };
-
-// const init = async arrCmds => {
-//   const timeStart = new Date().getTime();
-
-//   console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
-//   console.log('Start all');
-
-//   const result = await cmdIterate(arrCmds, () => {
-//     const timeEnd = new Date().getTime();
-//     const mins = (timeEnd - timeStart) / 1000 / 60;
-
-//     console.log(`End all. Completed in ${mins} mins.`);
-//     console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
-//   });
-//   return result;
-// };
-
-// const createDockerMachine = async () => {
-//   // windows only - create alternative for mac if testing
-//   const cmdAsBash = await execPromise(
-//     `@FOR /f "tokens=*" %i IN ('docker-machine env --shell cmd default') DO @%i`
-//   );
-//   const dockerRunning = await execPromise(`docker-machine status`);
-//   if (dockerRunning !== 'Running') {
-
-//   }
-//   cmd({
-//     cmds: `docker-machine create -d virtualbox --virtualbox-share-folder "c:\\:/c" default`,
-//     newwindow: true
-//   });
-// };
-// const spawns = init([
-//   () => {
-//     createDockerMachine();
-//   }
-// ]);
-
-// equivalent to single command line...
-// cwd changes directory to which the command is applied.
-// const spawnCRA = cmd({cmds: `npx create-react-app ${argv.name}`, cwd: '../'});
-// spawnCRA.kill('SIGKILL');
+export default sync;
