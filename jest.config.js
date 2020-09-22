@@ -8,7 +8,8 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
-    '^@/(.*)$': '<rootDir>/$1'
+    '^@/(.*)$': '<rootDir>/$1',
+    '^bin/(.*)$': '<rootDir>/$1'
   },
   setupFiles: ['dotenv/config'],
   moduleDirectories: ['node_modules', 'src'],

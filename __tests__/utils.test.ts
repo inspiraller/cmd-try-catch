@@ -7,7 +7,7 @@ import sync, {
   customProcess,
   getPosOfLen,
   catchProcess
-} from 'src/index';
+} from 'bin/main';
 
 const resolve = jest.fn();
 const reject = jest.fn();

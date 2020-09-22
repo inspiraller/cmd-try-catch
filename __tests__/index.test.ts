@@ -1,5 +1,4 @@
-import sync, { TProcessResponseFunc } from 'src/index';
-
+import sync, { TProcessResponseFunc } from 'bin/main';
 
 const experimentEcho1 = jest.fn((handle: TProcessResponseFunc) => {
   const error = Error('mock error experimentEcho1');

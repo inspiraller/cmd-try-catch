@@ -74,8 +74,8 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test jest",
     "sonar": "rimraf .scannerwork && node node_modules/sonarqube-scanner/dist/bin/sonar-scanner",
-    "start-tsnode": "cross-env NODE_ENV=development nodemon -r dotenv/config src/index.ts 'src/index.ts' --exec 'ts-node' src/index.ts -e ts,tsx ts-node/register",
-    "start-babel": "cross-env NODE_ENV=development nodemon src/index.ts --exec babel-node --extensions '.ts,.tsx' src/index.ts -r dotenv/config src/index.ts",
+    "start-tsnode": "cross-env NODE_ENV=development nodemon -r dotenv/config index.ts 'index.ts' --exec 'ts-node' index.ts -e ts,tsx ts-node/register",
+    "start-babel": "cross-env NODE_ENV=development nodemon index.ts --exec babel-node --extensions '.ts,.tsx' index.ts -r dotenv/config index.ts",
     "start": "npm run start-babel"
   }
 }

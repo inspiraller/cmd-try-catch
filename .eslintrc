@@ -27,15 +27,17 @@
         "extensions": [".js", ".ts"],
         "paths": ["./", "node_modules"],
         "alias": {
-          "__tests__": "./src/__tests__",
-          "src": "./src"
+          "__tests__": "./__tests__",
+          "src": "./src",
+          "bin": "./bin"
         }
       },
       "babel-module": {
         "extensions": [".js", ".ts"],
         "alias": {
-          "__tests__": "./src/__tests__",
-          "src": "./src"
+          "__tests__": "./__tests__",
+          "src": "./src",
+          "bin": "./bin"
         }
       }
     }
