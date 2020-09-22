@@ -28,7 +28,7 @@ type TSync = (
 type TProcess = (objCMD?: IObjCMD, isSpawn?: boolean) => Promise<TSTDOut>;
 
 const defaultExecOptions: ExecOptions = {
-  shell: 'process.env.ComSpec', // from options in exec, or /bin/sh in unix
+  shell: 'customProcess.env.ComSpec', // from options in exec, or /bin/sh in unix
   cwd: './'
 };
 // const defaultSpawnOptions: SpawnOptions = {
@@ -40,7 +40,9 @@ const defaultExecOptions: ExecOptions = {
 
 /* istanbul ignore next */
 const print = (msg: string, color?: typeof Color) => {
-  console.log(color ? chalk[color](msg) : msg);
+  if(process.env.NODE_ENV !== "test") { 
+    console.log(color ? chalk[color](msg) : msg);
+  }
 };
 
 /* istanbul ignore next */
@@ -48,6 +50,7 @@ const printTryCatch = (isTry: boolean, arr: IObjCMD[], len: number, msg: string)
   const intPos = getPosOfLen(arr, len);
   // const prefix: TPrefix = isTry ? 'Try: ' : 'Catch: ';
   const separator = isTry ? '                                                  ' : '';
+  //NOSONAR
   const color = isTry ? 'cyan' : 'cyan';
 
   print(chalk[color](separator));
@@ -74,9 +77,11 @@ export const processPromiseHandler: TProcessPromiseHandler = (resolve, reject) =
   }
 };
 
-export const process: TProcess = (objCMD, isSpawn = false) => {
+export const customProcess: TProcess = (objCMD, isSpawn = false) => {
   if (!objCMD) {
-    print('no objCMD supplied to process');
+    /* istanbul ignore next */
+    print('no objCMD supplied to customProcess');
+    
     return new Promise(resolve => resolve(''));
   }
   const { cmd } = objCMD;
@@ -122,13 +127,14 @@ sync = async (arrNext, intNextleng = 0) => {
   printTryCatch(true, arrNext, intNextLen, strMsg);
 
   const objCMD = arrNext.shift();
-  if (!objCMD) {
-    console.warn('Array has no objCMD');
+  if (!objCMD || !(objCMD.cmd || objCMD.func)) {
+    /* istanbul ignore next */
+    print('Array has no objCMD', 'red');
     return false;
   }
   const arrCatch = objCMD.catch;
   const intCatchLen = (arrCatch && arrCatch.length) || 0;
-  const tryAll = await process(objCMD)
+  const tryAll = await customProcess(objCMD)
     .then(async () => {
       if (arrNext.length) {
         const next = await sync(arrNext, intNextLen);
@@ -152,13 +158,14 @@ sync = async (arrNext, intNextleng = 0) => {
 
 syncCatch = async (arrNext, intNextLen, arrCatch, intCatchLen) => {
   if (!arrCatch) {
+    /* istanbul ignore next */
     print('arrCatch was not supplied to syncCatch');
     return false;
   }
   const strMsg = getMsg(arrCatch[0]);
   printTryCatch(false, arrCatch, intCatchLen || 0, strMsg);
   const objCMD = arrCatch.shift();
-  const catchAll = await process(objCMD)
+  const catchAll = await customProcess(objCMD)
     .then(() => true)
     .catch(async () => {
       const catchEach = await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen);

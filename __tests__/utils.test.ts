@@ -1,10 +1,10 @@
-import {
+import sync, {
   IObjCMD,
   TProcessResponseFunc,
   TError,
   TSTDOut,
   processPromiseHandler,
-  process,
+  customProcess,
   getPosOfLen,
   catchProcess
 } from 'src/index';
@@ -43,7 +43,7 @@ describe('utils', () => {
       };
       const isSpawn = true;
       let success: boolean = false;
-      await process(objCMD, isSpawn)
+      await customProcess(objCMD, isSpawn)
         .then(() => {
           success = true;
           expect(success).toBe(true);
@@ -58,7 +58,7 @@ describe('utils', () => {
       };
       const isSpawn = true;
       let success: boolean = false;
-      await process(objCMD, isSpawn)
+      await customProcess(objCMD, isSpawn)
         .then(() => {
           success = true;
         })
@@ -69,7 +69,7 @@ describe('utils', () => {
     });
     it('should run fail cmd if no objCMD', async () => {
       let success: boolean = false;
-      await process(undefined)
+      await customProcess(undefined)
         .then(() => {
           success = true;
         })
@@ -121,6 +121,68 @@ describe('utils', () => {
       await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen).then(() => {
         expect(true).toBe(false);
       }).catch(err => {
+        expect(true).toBe(true);
+      });
+    });
+  });
+
+  describe('sync', () => {
+    it('should run through sync method and catch methods but result with success', async () => {
+      const arrNext: IObjCMD[] = [
+        { cmd: 'echo 1'}, 
+        {
+          cmd: 'fail something',
+          catch: [
+            { cmd: 'fail catch'},
+            {
+              func: () => {
+                setTimeout(() => {
+                  console.log('done');
+                }, 1000)
+              }
+            }
+          ]
+        }
+      ];
+      await sync(arrNext).then(() => {
+        expect(true).toBe(true);
+      }).catch(err => {
+        expect(true).toBe(false);
+      });
+    });
+    it('should fail if no objCMD exists in array', async () => {
+      const arrNext: IObjCMD[] = [{}];
+      await sync(arrNext).then(() => {
+        expect(true).toBe(false);
+      }).catch(err => {
+        expect(true).toBe(true);
+      });
+    });
+    it('should fail if no objCMD exists in array', async () => {
+      const arrNext: any= [];
+      await sync(arrNext).then(() => {
+        expect(true).toBe(false);
+      }).catch(err => {
+        expect(true).toBe(true);
+      });
+    });
+    it('should fail if catch has no items in array', async () => {
+      const arrNext: IObjCMD[] = [{
+        cmd: 'do thing',
+        catch: []
+      }];
+  
+      await sync(arrNext).then(() => {
+        expect(true).toBe(false);
+      }).catch(err => {
+        expect(true).toBe(true);
+      });
+    });
+    it('should pass to next in array and complete all processes', async () => {
+      const arrNext: IObjCMD[] = [{cmd: 'echo steve'}, { cmd: 'echo steve'}];
+      await sync(arrNext).then(() => {
+        expect(true).toBe(true);
+      }).then(() => {
         expect(true).toBe(true);
       });
     });
