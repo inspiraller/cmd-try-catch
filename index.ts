@@ -1,53 +1,61 @@
-import sync, { TProcessResponseFunc } from 'bin/main';
+import sync, { TFunc } from 'bin/main';
+// import { TExecOut } from 'bin/promiseExec';
 
-const experimentEcho1 = (handle: TProcessResponseFunc) => {
-  const error = Error('mock error experimentEcho1');
-  const stdout = 'experimentEcho1';
-  const stderr = '';
+const experimentEcho1: TFunc = () => (
+  {
+    success: 'experimentEcho1'
+  }
+);
+
+const experimentEcho2: TFunc = new Promise ((_, reject) => {
   setTimeout(() => {
-    handle(error, stdout, stderr);
+    reject({
+      error: Error('mock error experimentEcho2')
+    });
   }, 2000);
-};
+});
 
-const experimentEcho2 = (handle: TProcessResponseFunc) => {
-  const error = Error('mock error experimentEcho2');
-  const stdout = 'experimentEcho2';
-  const stderr = '';
+const experimentEcho3: TFunc = new Promise (resolve => {
   setTimeout(() => {
-    handle(error, stdout, stderr);
+    resolve({
+      success: 'success'
+    });
   }, 2000);
-};
+});
 
-const experimentEcho3 = (handle: TProcessResponseFunc) => {
-  const error = null;
-  const stdout = 'success';
-  const stderr = '';
-  handle(error, stdout, stderr);
-};
+const experimentEcho4: TFunc = new Promise (resolve => {
+  setTimeout(() => {
+    resolve({
+      success: 'success'
+    });
+  }, 2000);
+});
 
-const experimentEcho4 = (handle: TProcessResponseFunc) => {
-  const error = null;
-  const stdout = 'success';
-  const stderr = '';
-  handle(error, stdout, stderr);
-};
+const experimentEcho5: TFunc = new Promise ((_, reject) => {
+  setTimeout(() => {
+    reject({
+      error: Error('echo 5 fails')
+    });
+  }, 2000);
+});
 
-const experimentEcho5 = (handle: TProcessResponseFunc) => {
-  const error = Error('echo 5 fails');
-  const stdout = 'success';
-  const stderr = '';
-  handle(error, stdout, stderr);
-};
+const experimentEcho6: TFunc = new Promise (resolve => {
+  setTimeout(() => {
+    resolve({
+      success: 'success'
+    });
+  }, 2000);
+});
 
-const experimentEcho6 = (handle: TProcessResponseFunc) => {
-  const error = null;
-  const stdout = 'success';
-  const stderr = '';
-  handle(error, stdout, stderr);
-};
+const experimentEcho7: TFunc = new Promise (resolve => {
+  setTimeout(() => {
+    resolve({
+      success: 'success'
+    });
+  }, 2000);
+});
 
 let isComplete: boolean = false;
-
 
 const init =  async () => {
     isComplete = await sync([
@@ -72,9 +80,11 @@ const init =  async () => {
             func: experimentEcho6
           }
         ]
+      },
+      {
+        func: experimentEcho7
       }
     ]);
-  console.log('isComplete = ', isComplete);
 };
 
 init();

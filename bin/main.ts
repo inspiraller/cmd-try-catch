@@ -1,36 +1,67 @@
-import { exec, ExecOptions, ExecException } from 'child_process';
-import chalk, { Color } from 'chalk';
+import { exec, ExecOptions } from 'child_process';
+import chalk from 'chalk';
+import { TExecOutput, handleExecOut, TPromiseResponse, TResolveFunc, TRejectFunc, TObjSuccess, TObjError } from 'bin/promiseExec';
+import print from './print';
 
-export type TError = ExecException | null;
-export type TSTDOut = string | Buffer;
+// not needed for promiseExex
+export type TObjSuccessOrError = {
+  success?: TObjSuccess['success'];
+  error?: TObjError['error'];
+};
 
-export type TProcessResponseFunc = (error: TError, stdout: TSTDOut, stderr: TSTDOut) => void;
-
-export type TProcessPromiseHandler = (
-  resolve: (value: TSTDOut) => void,
-  reject: (value: TError) => void
-) => TProcessResponseFunc;
+export type TFunc = (() => TObjSuccessOrError) | TPromiseResponse;
 
 export interface IObjCMD {
   msg?: string;
   cmd?: string;
-  func?: (fn: TProcessResponseFunc) => void;
+  func?: TFunc;
   catch?: IObjCMD[];
 }
+// IObjCMD
+interface ISync {
+  arrNext: IObjCMD[];
+}
 
-type TSync = (
-  arrNext: IObjCMD[],
-  intNextLen?: number,
-  arrCatch?: IObjCMD[],
-  intCatchLen?: number
-) => Promise<boolean>;
+interface ISyncTry extends ISync {
+  intNextLen: number;
+  arrCatch?: IObjCMD[];
+  intCatchLen?: number;
+}
 
-type TProcess = (objCMD?: IObjCMD, isSpawn?: boolean) => Promise<TSTDOut>;
+interface ISyncCatch extends ISync {
+  intNextLen: number;
+  arrCatch: IObjCMD[];
+  intCatchLen: number;
+}
 
-const defaultExecOptions: ExecOptions = {
-  shell: 'customProcess.env.ComSpec', // from options in exec, or /bin/sh in unix
-  cwd: './'
-};
+type TSync = (arrNext: ISync['arrNext']) => Promise<boolean>;
+type TSyncTry = (props: ISyncTry) => Promise<boolean>;
+type TSyncCatch = (props: ISyncCatch) => Promise<boolean>;
+
+type TProcess = (
+  objCMD?: IObjCMD,
+  opt?: ExecOptions
+) => TPromiseResponse;
+
+type TGetMsg = (objCMD: IObjCMD) => string;
+
+// #########################################################################################
+// code
+
+// const defaultExecOptions: ExecOptions = {
+// shell: 'customProcess.env.ComSpec', // from options in exec, or /bin/sh in unix
+
+// Troubleshoot: - Error: spawn .env.ComSpec ENOENT
+// https://stackoverflow.com/questions/38458118/nodejs-error-spawn-c-windows-system32-cmd-exe-enoent
+// cwd: path.resolve(__dirname, '../') //'./',
+
+// https://maxschmitt.me/posts/error-spawn-node-enoent-node-js-child-process/
+// env: {
+//   NODE_ENV: process.env.NODE_ENV,
+//   PATH: process.env.PATH
+// }
+
+// };
 // const defaultSpawnOptions: SpawnOptions = {
 //   stdio: 'ignore', // 'inherit',
 //   shell: true,
@@ -39,91 +70,151 @@ const defaultExecOptions: ExecOptions = {
 // };
 
 /* istanbul ignore next */
-const print = (msg: string, color?: typeof Color) => {
-  if(process.env.NODE_ENV !== "test") { 
-    console.log(color ? chalk[color](msg) : msg);
-  }
-};
-
-/* istanbul ignore next */
 const printTryCatch = (isTry: boolean, arr: IObjCMD[], len: number, msg: string) => {
   const intPos = getPosOfLen(arr, len);
-  // const prefix: TPrefix = isTry ? 'Try: ' : 'Catch: ';
   const separator = isTry ? '                                                  ' : '';
-  //NOSONAR
-  const color = isTry ? 'cyan' : 'cyan';
-
+  const color = 'cyan';
   print(chalk[color](separator));
   if (isTry) {
     print(chalk[color](`${intPos}: ${msg}`));
   } else {
-    // print(chalk[color](`${prefix} (${intPos} of ${len}): ${msg}`));
     print(chalk[color](`CATCH: ${msg}`));
   }
 };
 
-export const processPromiseHandler: TProcessPromiseHandler = (resolve, reject) => (
-  error,
-  stdout,
-  stderr
-) => {
-  // print(chalk.grey(` - ${msg}`));
-  if (error) {
-    print(chalk.grey(error));
-    reject(error);
-  } else {
-    print(chalk.grey(stdout));
-    resolve(stdout || stderr);
-  }
-};
-
-export const customProcess: TProcess = (objCMD, isSpawn = false) => {
-  if (!objCMD) {
-    /* istanbul ignore next */
-    print('no objCMD supplied to customProcess');
-    
-    return new Promise(resolve => resolve(''));
-  }
-  const { cmd } = objCMD;
-  return new Promise((resolve, reject) => {
-    if (objCMD.func) {
-      objCMD.func(processPromiseHandler(resolve, reject));
-    }
-    // if (isSpawn) {
-    // need to figure out why typescript is not working for defaultExecOptions or defaultSpawnOptions
-    //   spawn(cmd as string, defaultExecOptions, processPromiseHandler(resolve, reject));
-    // }
-    exec(cmd as string, defaultExecOptions, processPromiseHandler(resolve, reject));
-  });
-};
-
-let syncCatch: TSync;
-let sync: TSync;
-let catchProcess: TSync;
-
 export const getPosOfLen = (arr: IObjCMD[], len: number): string =>
   arr.length ? `${len - (arr.length - 1)}` : String(len);
 
-catchProcess = async (arrNext, intNextLen, arrCatch, intCatchLen) => {
+// shallowCloneArrObjCMD () - notes:
+//   Will only clone single level - [{key: value, catch: [{key: value}]}]
+//   Won't clone deeper level - [{key: {deepkey: value}, catch: [{key: {deepkey: value}}]}]
+
+const shallowCloneArrObjCMD = (arrNext: IObjCMD[]) =>
+  arrNext.reduce((accum, current) => {
+    let objCMD: IObjCMD = current;
+    if (current.catch) {
+      const { catch: aliasCatch, ...rest } = current;
+      const arrCatch: IObjCMD[] = aliasCatch ? shallowCloneArrObjCMD(aliasCatch) : [];
+      objCMD = { ...rest, catch: arrCatch };
+    }
+    accum.push({ ...objCMD });
+    return accum;
+  }, [] as IObjCMD[]);
+
+const getMsg: TGetMsg = objCMD => {
+  const { msg, cmd, func } = objCMD;
+  const strMsg: string = msg || cmd || (func && !(func instanceof Promise) && func.name) || '';
+  return strMsg;
+};
+
+type THandleFunc = (func: TFunc, resolve: TResolveFunc, reject: TRejectFunc) => void;
+
+
+
+// can supply function with a response like this 
+/*
+sync([
+  func: () => {
+    // do something 
+    
+    return x ? 
+    {
+      success: 'true'
+    }
+    : {
+      error: Error('some error')
+    }
+  }
+])
+const somePromise = new Promise(resolve => {
+  resolve({
+    success: 'some success'
+  })
+});
+sync([
+  func: somePromise
+])
+
+*/
+export const handleFunc: THandleFunc = async (func, resolve, reject) => {
+  if (func instanceof Promise) {
+    // const aliasFunc: Promise<{ success: TExecOutput['success'] }> = objCMD.func;
+    await func
+      .then(() => {
+        resolve({ success: 'true' });
+      })
+      .catch((err: TExecOutput['error']) => {
+        reject({ error: err });
+      });
+  } else {
+    try {
+      const result: TObjSuccessOrError = func();
+      if (result.success) {
+        resolve({ success: result.success });
+      } else if (result.error) {
+        reject({ error: result.error });
+      } else {
+        reject({ error: Error('You have not supplied a success or error response in your function.')});
+      }
+    } catch (err) {
+      reject({ error: err });
+    }
+  }
+};
+
+export const customProcess: TProcess = (objCMD, opt = {}) =>
+  new Promise(async (resolve, reject) => {
+    const func: TFunc | undefined = objCMD && objCMD.func;
+    if (!objCMD || (!objCMD.cmd && !objCMD.func)) {
+      reject({ error: Error('no objCMD cmd or func supplied to customProcess') });
+    } else if (func) {
+      handleFunc(func, resolve, reject);
+    } else {
+      exec(objCMD.cmd as string, opt, handleExecOut(resolve, reject));
+    }
+  });
+
+let sync: TSync;
+let syncTry: TSyncTry;
+let catchProcess: TSyncTry;
+let syncCatch: TSyncCatch;
+
+catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen }) => {
   if (arrCatch && arrCatch.length) {
-    const handleCatch = await syncCatch(arrNext, intNextLen, arrCatch, intCatchLen);
+    const handleCatch = await syncCatch({
+      arrNext,
+      intNextLen,
+      arrCatch,
+      intCatchLen: intCatchLen as number
+    });
     return handleCatch;
   }
   print(chalk.bgRed(' ! Cannot continue ! no more catches'));
   return false;
 };
-type TGetMsg = (objCMD: IObjCMD) => string;
 
-const getMsg: TGetMsg = objCMD => {
-  const { msg, cmd, func } = objCMD;
-  const strMsg: string = msg || cmd || (func && func.name) || '';
-  return strMsg;
+syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen }) => {
+  const strMsg = getMsg(arrCatch[0]);
+  printTryCatch(false, arrCatch, intCatchLen || 0, strMsg);
+  const objCMD = arrCatch.shift();
+  const catchAll = await customProcess(objCMD)
+    .then(() => {
+      return true;
+    })
+    .catch(async () => {
+      const catchEach = await catchProcess({
+        arrNext,
+        intNextLen,
+        arrCatch,
+        intCatchLen
+      });
+      return catchEach;
+    });
+  return catchAll;
 };
 
-sync = async (arrNext, intNextleng = 0) => {
-  const intNextLen = intNextleng !== 0 ? intNextleng : arrNext.length;
+syncTry = async ({ arrNext, intNextLen }) => {
   const strMsg = getMsg(arrNext[0]);
-
   printTryCatch(true, arrNext, intNextLen, strMsg);
 
   const objCMD = arrNext.shift();
@@ -134,19 +225,25 @@ sync = async (arrNext, intNextleng = 0) => {
   }
   const arrCatch = objCMD.catch;
   const intCatchLen = (arrCatch && arrCatch.length) || 0;
+
   const tryAll = await customProcess(objCMD)
     .then(async () => {
       if (arrNext.length) {
-        const next = await sync(arrNext, intNextLen);
+        const next = await syncTry({ arrNext, intNextLen });
         return next;
       }
       return true;
     })
     .catch(async () => {
-      const catchAll = await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen);
+      const catchAll = await catchProcess({
+        arrNext,
+        intNextLen,
+        arrCatch,
+        intCatchLen
+      });
       if (catchAll) {
         if (arrNext && arrNext.length) {
-          const next = await sync(arrNext, intNextLen);
+          const next = await syncTry({ arrNext, intNextLen });
           return next;
         }
         return true;
@@ -154,30 +251,16 @@ sync = async (arrNext, intNextleng = 0) => {
       return false;
     });
   return tryAll;
+  // return new Promise((resolve, reject) => resolve(true));
 };
 
-syncCatch = async (arrNext, intNextLen, arrCatch, intCatchLen) => {
-  if (!arrCatch) {
-    /* istanbul ignore next */
-    print('arrCatch was not supplied to syncCatch');
-    return false;
-  }
-  const strMsg = getMsg(arrCatch[0]);
-  printTryCatch(false, arrCatch, intCatchLen || 0, strMsg);
-  const objCMD = arrCatch.shift();
-  const catchAll = await customProcess(objCMD)
-    .then(() => true)
-    .catch(async () => {
-      const catchEach = await catchProcess(arrNext, intNextLen, arrCatch, intCatchLen);
-      return catchEach;
-    });
-  return catchAll;
+sync = async arrNext => {
+  const cloneArrNext = shallowCloneArrObjCMD(arrNext);
+  const intNextLen = cloneArrNext.length;
+  const isComplete = await syncTry({ arrNext: cloneArrNext, intNextLen });
+  return isComplete;
 };
 
-export {
-  sync,
-  syncCatch,
-  catchProcess
-};
+export { syncTry, syncCatch, catchProcess };
 
 export default sync;
