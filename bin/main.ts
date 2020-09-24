@@ -146,7 +146,7 @@ export const handleFuncAsResult: THandleFuncResult = (result, resolve, reject) =
     } else {
       reject({ error: Error('You have not supplied a success or error response in your function.')});
     }
-  } catch (err) {
+  } catch (err) { // Todo: test edgecase
     reject({ error: err });
   }
 };
@@ -156,7 +156,7 @@ type THandleFuncAsPromise = (response: TPromiseResponse, resolve: TResolveFunc, 
 export const handleFuncAsPromise: THandleFuncAsPromise = (response, resolve, reject) => {
   response
   .then(result => {
-    resolve({ success: 'true' });
+    resolve(result);
   })
   .catch((err: TExecOutput['error']) => {
     reject({ error: err });

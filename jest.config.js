@@ -1,5 +1,6 @@
 module.exports = {
   roots: ['<rootDir>', '<rootDir>/bin', '<rootDir>/__tests__'],
+  testTimeout: 10000,
   transform: {
     '.js': 'babel-jest',
     '.ts': 'ts-jest'

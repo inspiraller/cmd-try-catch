@@ -2,8 +2,8 @@
 // import { TExecOutput, TPromiseResponse } from 'bin/promiseExec';
 
 
-import { handleExecOut, TExecOut, TError, TSTDOut, TExecOutput, TPromiseResponse } from 'bin/promiseExec';
-import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry } from 'bin/main';
+import { handleExecOut, TExecOut, TError, TSTDOut, TExecOutput } from 'bin/promiseExec';
+import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry , TFunc} from 'bin/main';
 
 
 export type TResponse = TExecOutput | void;
@@ -22,10 +22,10 @@ const resolve = jest.fn();
 const reject = jest.fn();
 const processResponse: TExecOut = handleExecOut(resolve, reject);
 
-const timer: TPromiseResponse = new Promise(resolve => {
+const timer: TFunc = () => new Promise(resolve => {
   setTimeout(() => {
     resolve({success: 'true'});
-  }, 1000);
+  }, 500);
 });
 
 
