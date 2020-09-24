@@ -9,7 +9,7 @@ export type TObjSuccessOrError = {
   error?: TObjError['error'];
 };
 
-export type TFunc = (() => TObjSuccessOrError) | TPromiseResponse;
+export type TFunc = () => TObjSuccessOrError | TPromiseResponse;
 
 export interface IObjCMD {
   msg?: string;
@@ -136,39 +136,50 @@ sync([
 ])
 
 */
-export const handleFunc: THandleFunc = async (func, resolve, reject) => {
-  if (func instanceof Promise) {
-    // const aliasFunc: Promise<{ success: TExecOutput['success'] }> = objCMD.func;
-    await func
-      .then(() => {
-        resolve({ success: 'true' });
-      })
-      .catch((err: TExecOutput['error']) => {
-        reject({ error: err });
-      });
-  } else {
-    try {
-      const result: TObjSuccessOrError = func();
-      if (result.success) {
-        resolve({ success: result.success });
-      } else if (result.error) {
-        reject({ error: result.error });
-      } else {
-        reject({ error: Error('You have not supplied a success or error response in your function.')});
-      }
-    } catch (err) {
-      reject({ error: err });
+type THandleFuncResult = (result: TObjSuccessOrError, resolve: TResolveFunc, reject: TRejectFunc) => void;
+export const handleFuncAsResult: THandleFuncResult = (result, resolve, reject) => {
+  try {
+    if (result.success) {
+      resolve({ success: result.success });
+    } else if (result.error) {
+      reject({ error: result.error });
+    } else {
+      reject({ error: Error('You have not supplied a success or error response in your function.')});
     }
+  } catch (err) {
+    reject({ error: err });
+  }
+};
+
+type THandleFuncAsPromise = (response: TPromiseResponse, resolve: TResolveFunc, reject: TRejectFunc) => void;
+
+export const handleFuncAsPromise: THandleFuncAsPromise = (response, resolve, reject) => {
+  response
+  .then(result => {
+    resolve({ success: 'true' });
+  })
+  .catch((err: TExecOutput['error']) => {
+    reject({ error: err });
+  });
+};
+
+export const handleFunc: THandleFunc = (func, resolve, reject) => {
+  const response: TObjSuccessOrError | TPromiseResponse = func();
+  if (response instanceof Promise) {
+    handleFuncAsPromise(response, resolve, reject);
+  } else {
+    const result: TObjSuccessOrError = response;
+    handleFuncAsResult(result, resolve, reject);
   }
 };
 
 export const customProcess: TProcess = (objCMD, opt = {}) =>
-  new Promise(async (resolve, reject) => {
-    const func: TFunc | undefined = objCMD && objCMD.func;
+  new Promise((resolve, reject) => {
+    // const func: TFunc | undefined = objCMD && objCMD.func;
     if (!objCMD || (!objCMD.cmd && !objCMD.func)) {
       reject({ error: Error('no objCMD cmd or func supplied to customProcess') });
-    } else if (func) {
-      handleFunc(func, resolve, reject);
+    } else if (objCMD.func) {
+      handleFunc(objCMD.func, resolve, reject);
     } else {
       exec(objCMD.cmd as string, opt, handleExecOut(resolve, reject));
     }

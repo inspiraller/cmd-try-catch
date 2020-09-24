@@ -1,56 +1,56 @@
 import sync, { TFunc } from 'bin/main';
 // import { TExecOut } from 'bin/promiseExec';
 
-const experimentEcho1: TFunc = () => (
+const mock1Success: TFunc = () => (
   {
-    success: 'experimentEcho1'
+    success: 'mock1Success'
   }
 );
 
-const experimentEcho2: TFunc = new Promise ((_, reject) => {
+const mock2Error: TFunc = () => new Promise ((_, reject) => {
   setTimeout(() => {
     reject({
-      error: Error('mock error experimentEcho2')
+      error: Error('mock2Error')
     });
   }, 2000);
 });
 
-const experimentEcho3: TFunc = new Promise (resolve => {
+const mock3Success: TFunc = () => new Promise (resolve => {
   setTimeout(() => {
     resolve({
-      success: 'success'
+      success: 'mock3Success'
     });
   }, 2000);
 });
 
-const experimentEcho4: TFunc = new Promise (resolve => {
+const mock4Success: TFunc = () => new Promise (resolve => {
   setTimeout(() => {
     resolve({
-      success: 'success'
+      success: 'mock4Success'
     });
   }, 2000);
 });
 
-const experimentEcho5: TFunc = new Promise ((_, reject) => {
+const mock5Error: TFunc = () => new Promise ((_, reject) => {
   setTimeout(() => {
     reject({
-      error: Error('echo 5 fails')
+      error: Error('mock5Error')
     });
   }, 2000);
 });
 
-const experimentEcho6: TFunc = new Promise (resolve => {
+const mock6Success: TFunc = () => new Promise (resolve => {
   setTimeout(() => {
     resolve({
-      success: 'success'
+      success: 'mock6Success'
     });
   }, 2000);
 });
 
-const experimentEcho7: TFunc = new Promise (resolve => {
+const mock7Success: TFunc = () => new Promise (resolve => {
   setTimeout(() => {
     resolve({
-      success: 'success'
+      success: 'mock7Success'
     });
   }, 2000);
 });
@@ -60,29 +60,29 @@ let isComplete: boolean = false;
 const init =  async () => {
     isComplete = await sync([
       {
-        func: experimentEcho1,
+        func: mock1Success,
         catch: [
           {
-            func: experimentEcho2
+            func: mock2Error
           },
           {
-            func: experimentEcho3
+            func: mock3Success
           },
           {
-            func: experimentEcho4
+            func: mock4Success
           }
         ]
       },
       {
-        func: experimentEcho5,
+        func: mock5Error,
         catch: [
           {
-            func: experimentEcho6
+            func: mock6Success
           }
         ]
       },
       {
-        func: experimentEcho7
+        func: mock7Success
       }
     ]);
 };
