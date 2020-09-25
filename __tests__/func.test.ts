@@ -17,37 +17,37 @@ const mockPromiseSuccess = jest.fn<TPromiseResponse, any>(() =>  new Promise (re
 }));
 
 
-const mockSuccess1 = jest.fn<TObjSuccessOrError, any>(() => (
+const mockSuccess1 = jest.fn<IObjSuccessOrError, any>(() => (
   {
     success: 'mockSuccess1'
   }
 ));
 
-const mockSuccess2 = jest.fn<TObjSuccessOrError, any>(() => (
+const mockSuccess2 = jest.fn<IObjSuccessOrError, any>(() => (
   {
     success: 'mockSuccess2'
   }
 ));
 
-const mockError1 = jest.fn<TObjSuccessOrError, any>(() => (
+const mockError1 = jest.fn<IObjSuccessOrError, any>(() => (
   {
     error: Error('mockError1')
   }
 ));
 
-const mockError2 = jest.fn<TObjSuccessOrError, any>(() => (
+const mockError2 = jest.fn<IObjSuccessOrError, any>(() => (
   {
     error: Error('mockError2')
   }
 ));
 
-const obj: TObjSuccessOrError = {
+const obj: IObjSuccessOrError = {
   error: Error('mockError1')
 };
 
 delete obj.error;
 
-const mockFuncNoSuccesOrError = jest.fn<TObjSuccessOrError, any>(() => (
+const mockFuncNoSuccesOrError = jest.fn<IObjSuccessOrError, any>(() => (
   obj
 ));
 

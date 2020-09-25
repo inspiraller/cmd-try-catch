@@ -1,7 +1,7 @@
 import { handleExecOut } from 'src/promiseExec';
 import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry} from 'src/sync';
 
-export type TResponse = TExecOutput | void;
+export type TResponse = IExecOutput | void;
 
 // troubleshoot - testing:
 // https://github.com/nodejs/node-v0.x-archive/issues/25895

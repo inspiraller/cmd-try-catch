@@ -17,17 +17,17 @@ export const handleFuncAsPromise: THandleFuncAsPromise = (response, resolve, rej
   .then(result => {
     resolve(result);
   })
-  .catch((err: TExecOutput['error']) => {
+  .catch((err: IExecOutput['error']) => {
     reject({ error: err });
   });
 };
 
 export const handleFunc: THandleFunc = (func, resolve, reject) => {
-  const response: TObjSuccessOrError | TPromiseResponse = func();
+  const response: IObjSuccessOrError | TPromiseResponse = func();
   if (response instanceof Promise) {
     handleFuncAsPromise(response, resolve, reject);
   } else {
-    const result: TObjSuccessOrError = response;
+    const result: IObjSuccessOrError = response;
     handleFuncAsResult(result, resolve, reject);
   }
 };
