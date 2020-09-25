@@ -28,16 +28,14 @@
         "paths": ["./", "node_modules"],
         "alias": {
           "__tests__": "./__tests__",
-          "src": "./src",
-          "bin": "./bin"
+          "src": "./src"
         }
       },
       "babel-module": {
         "extensions": [".js", ".ts"],
         "alias": {
           "__tests__": "./__tests__",
-          "src": "./src",
-          "bin": "./bin"
+          "src": "./src"
         }
       }
     }

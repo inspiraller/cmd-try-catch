@@ -16,16 +16,11 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true, /* Needed for .graphql imports - Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
-    "typeRoots": [
-      "node_modules/@types",
-      "@types"
-    ],
     "noUnusedParameters": false, // Todo: after update to eslint. This is to allow  _ in mutation...eg:  addPlayer: async (_, args) =>, as its the first variable. eslint can have granular check to allow _
     "paths": {
-      "src/*": ["./src/*"],
-      "bin/*": ["./bin/*"]
+      "src/*": ["./src/*"]
     }
   },
   "exclude": ["node_modules"],
-  "include": ["./*", "@types", "__tests__"]
+  "include": ["./*", "__tests__", "/src/*", "@types"]
 }

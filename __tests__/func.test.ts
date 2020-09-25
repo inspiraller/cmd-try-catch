@@ -1,6 +1,4 @@
-import sync, { TObjSuccessOrError } from 'bin/main';
-import { TPromiseResponse } from 'bin/promiseExec';
-
+import sync from 'src/sync';
 
 const mockPromiseError = jest.fn<TPromiseResponse, any>(() => new Promise ((_, reject) => {
   setTimeout(() => {

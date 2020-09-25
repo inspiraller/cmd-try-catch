@@ -1,4 +1,4 @@
-import sync from 'bin/main';
+import sync from 'src/sync';
 
 
 let isComplete: boolean = false;

@@ -1,5 +1,5 @@
 module.exports = {
-  roots: ['<rootDir>', '<rootDir>/bin', '<rootDir>/__tests__'],
+  roots: ['<rootDir>', '<rootDir>/src', '<rootDir>/__tests__'],
   testTimeout: 10000,
   transform: {
     '.js': 'babel-jest',
@@ -9,11 +9,10 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
-    '^@/(.*)$': '<rootDir>/$1',
-    '^bin/(.*)$': '<rootDir>/bin/$1'
+    '^@/(.*)$': '<rootDir>/$1'
   },
   setupFiles: ['dotenv/config'],
-  moduleDirectories: ['node_modules', 'bin', '__tests__'],
+  moduleDirectories: ['node_modules', 'src', '__tests__'],
   testEnvironment: 'node',
   globals: {
     'ts-jest': {
@@ -34,7 +33,7 @@ module.exports = {
     ]
   ],
   coveragePathIgnorePatterns: ['node_modules', 'print.ts'],
-  collectCoverageFrom: ['bin/*.{t,j}s', 'bin/**/*.{t,j}s'],
+  collectCoverageFrom: ['src/*.{t,j}s', 'src/**/*.{t,j}s'],
   coverageThreshold: {
     global: {
       branches: 90,

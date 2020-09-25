@@ -1,5 +1,5 @@
 
-import promiseExec, { TObjError, TObjSuccess } from 'bin/promiseExec';
+import promiseExec from 'src/promiseExec';
 
 type TObjSuccessOrError = {
   success?: TObjSuccess['success'];

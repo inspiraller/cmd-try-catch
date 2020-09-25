@@ -1,6 +1,4 @@
-import sync, { TFunc } from 'bin/main';
-// import { TExecOut } from 'bin/promiseExec';
-
+import sync from 'src/sync';
 const mock1Success: TFunc = () => (
   {
     success: 'mock1Success'

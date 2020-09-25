@@ -1,7 +1,7 @@
 # cmd-try-catch description
 This repository enables the ability to provide an array of commands with catch alternatives
 
-# instructions
+# Instructions
 - You supply an array of commands which run either asynchronously or synchronously
 - Each command waits until the other has completed
 - You can supply either a cmd or a function or a promise

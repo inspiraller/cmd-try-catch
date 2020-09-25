@@ -1,10 +1,5 @@
-// import sync, { IObjCMD } from 'bin/main';
-// import { TExecOutput, TPromiseResponse } from 'bin/promiseExec';
-
-
-import { handleExecOut, TExecOut, TError, TSTDOut, TExecOutput } from 'bin/promiseExec';
-import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry , TFunc} from 'bin/main';
-
+import { handleExecOut } from 'src/promiseExec';
+import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry} from 'src/sync';
 
 export type TResponse = TExecOutput | void;
 

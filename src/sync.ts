@@ -1,15 +1,9 @@
 import { exec, ExecOptions } from 'child_process';
+import { handleExecOut } from './promiseExec';
+import { handleFunc } from './promiseFunc';
+
 import chalk from 'chalk';
-import { TExecOutput, handleExecOut, TPromiseResponse, TResolveFunc, TRejectFunc, TObjSuccess, TObjError } from 'bin/promiseExec';
 import print from './print';
-
-// not needed for promiseExex
-export type TObjSuccessOrError = {
-  success?: TObjSuccess['success'];
-  error?: TObjError['error'];
-};
-
-export type TFunc = () => TObjSuccessOrError | TPromiseResponse;
 
 export interface IObjCMD {
   msg?: string;
@@ -105,72 +99,6 @@ const getMsg: TGetMsg = objCMD => {
   const { msg, cmd, func } = objCMD;
   const strMsg: string = msg || cmd || (func && !(func instanceof Promise) && func.name) || '';
   return strMsg;
-};
-
-type THandleFunc = (func: TFunc, resolve: TResolveFunc, reject: TRejectFunc) => void;
-
-
-
-// can supply function with a response like this 
-/*
-sync([
-  func: () => {
-    // do something 
-    
-    return x ? 
-    {
-      success: 'true'
-    }
-    : {
-      error: Error('some error')
-    }
-  }
-])
-const somePromise = new Promise(resolve => {
-  resolve({
-    success: 'some success'
-  })
-});
-sync([
-  func: somePromise
-])
-
-*/
-type THandleFuncResult = (result: TObjSuccessOrError, resolve: TResolveFunc, reject: TRejectFunc) => void;
-export const handleFuncAsResult: THandleFuncResult = (result, resolve, reject) => {
-  try {
-    if (result.success) {
-      resolve({ success: result.success });
-    } else if (result.error) {
-      reject({ error: result.error });
-    } else {
-      reject({ error: Error('You have not supplied a success or error response in your function.')});
-    }
-  } catch (err) { // Todo: test edgecase
-    reject({ error: err });
-  }
-};
-
-type THandleFuncAsPromise = (response: TPromiseResponse, resolve: TResolveFunc, reject: TRejectFunc) => void;
-
-export const handleFuncAsPromise: THandleFuncAsPromise = (response, resolve, reject) => {
-  response
-  .then(result => {
-    resolve(result);
-  })
-  .catch((err: TExecOutput['error']) => {
-    reject({ error: err });
-  });
-};
-
-export const handleFunc: THandleFunc = (func, resolve, reject) => {
-  const response: TObjSuccessOrError | TPromiseResponse = func();
-  if (response instanceof Promise) {
-    handleFuncAsPromise(response, resolve, reject);
-  } else {
-    const result: TObjSuccessOrError = response;
-    handleFuncAsResult(result, resolve, reject);
-  }
 };
 
 export const customProcess: TProcess = (objCMD, opt = {}) =>
