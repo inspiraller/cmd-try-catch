@@ -10,6 +10,7 @@ export interface IObjCMD {
   cmd?: string;
   func?: TFunc;
   catch?: IObjCMD[];
+  complete?: IObjSuccessOrError
 }
 // IObjCMD
 interface ISync {
@@ -17,12 +18,14 @@ interface ISync {
 }
 
 interface ISyncTry extends ISync {
+  intNextCursor: number;
   intNextLen: number;
   arrCatch?: IObjCMD[];
   intCatchLen?: number;
 }
 
 interface ISyncCatch extends ISync {
+  intCatchCursor: number;
   intNextLen: number;
   arrCatch: IObjCMD[];
   intCatchLen: number;
@@ -33,7 +36,7 @@ type TSyncTry = (props: ISyncTry) => Promise<boolean>;
 type TSyncCatch = (props: ISyncCatch) => Promise<boolean>;
 
 type TProcess = (
-  objCMD?: IObjCMD,
+  objCMD: IObjCMD,
   opt?: ExecOptions
 ) => TPromiseResponse;
 
@@ -79,11 +82,7 @@ const printTryCatch = (isTry: boolean, arr: IObjCMD[], len: number, msg: string)
 export const getPosOfLen = (arr: IObjCMD[], len: number): string =>
   arr.length ? `${len - (arr.length - 1)}` : String(len);
 
-// shallowCloneArrObjCMD () - notes:
-//   Will only clone single level - [{key: value, catch: [{key: value}]}]
-//   Won't clone deeper level - [{key: {deepkey: value}, catch: [{key: {deepkey: value}}]}]
-
-const shallowCloneArrObjCMD = (arrNext: IObjCMD[]) =>
+export const shallowCloneArrObjCMD = (arrNext: IObjCMD[]) =>
   arrNext.reduce((accum, current) => {
     let objCMD: IObjCMD = current;
     if (current.catch) {
@@ -104,9 +103,7 @@ const getMsg: TGetMsg = objCMD => {
 export const customProcess: TProcess = (objCMD, opt = {}) =>
   new Promise((resolve, reject) => {
     // const func: TFunc | undefined = objCMD && objCMD.func;
-    if (!objCMD || (!objCMD.cmd && !objCMD.func)) {
-      reject({ error: Error('no objCMD cmd or func supplied to customProcess') });
-    } else if (objCMD.func) {
+    if (objCMD.func) {
       handleFunc(objCMD.func, resolve, reject);
     } else {
       exec(objCMD.cmd as string, opt, handleExecOut(resolve, reject));
@@ -115,27 +112,36 @@ export const customProcess: TProcess = (objCMD, opt = {}) =>
 
 let sync: TSync;
 let syncTry: TSyncTry;
-let catchProcess: TSyncTry;
+let catchProcess: TSyncCatch;
 let syncCatch: TSyncCatch;
 
-catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen }) => {
-  if (arrCatch && arrCatch.length) {
+catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor }) => {
+  const isCatch = intCatchCursor < arrCatch.length;
+  if (isCatch) {
     const handleCatch = await syncCatch({
       arrNext,
       intNextLen,
       arrCatch,
-      intCatchLen: intCatchLen as number
+      intCatchLen,
+      intCatchCursor
     });
     return handleCatch;
   }
+  /* istanbul ignore next */
   print(chalk.bgRed(' ! Cannot continue ! no more catches'));
   return false;
 };
 
-syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen }) => {
-  const strMsg = getMsg(arrCatch[0]);
+syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor }) => {
+  const strMsg = getMsg(arrCatch[intCatchCursor]);
+
+  /* istanbul ignore next */
   printTryCatch(false, arrCatch, intCatchLen || 0, strMsg);
-  const objCMD = arrCatch.shift();
+
+  const objCMD = arrCatch[intCatchCursor];
+  intCatchCursor += 1;
+  // const isCatchNext = intCatchCursor < arrCatch.length;
+
   const catchAll = await customProcess(objCMD)
     .then(() => {
       return true;
@@ -145,18 +151,23 @@ syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen }) => {
         arrNext,
         intNextLen,
         arrCatch,
-        intCatchLen
+        intCatchLen,
+        intCatchCursor
       });
       return catchEach;
     });
   return catchAll;
 };
 
-syncTry = async ({ arrNext, intNextLen }) => {
-  const strMsg = getMsg(arrNext[0]);
+syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
+  const strMsg = getMsg(arrNext[intNextCursor]);
+  /* istanbul ignore next */
   printTryCatch(true, arrNext, intNextLen, strMsg);
 
-  const objCMD = arrNext.shift();
+  const objCMD = arrNext[intNextCursor];
+  intNextCursor += 1;
+  const isNext = intNextCursor < arrNext.length;
+
   if (!objCMD || !(objCMD.cmd || objCMD.func)) {
     /* istanbul ignore next */
     print('Array has no objCMD', 'red');
@@ -164,25 +175,31 @@ syncTry = async ({ arrNext, intNextLen }) => {
   }
   const arrCatch = objCMD.catch;
   const intCatchLen = (arrCatch && arrCatch.length) || 0;
+  const intCatchCursor = 0;
 
   const tryAll = await customProcess(objCMD)
     .then(async () => {
-      if (arrNext.length) {
-        const next = await syncTry({ arrNext, intNextLen });
+      if (isNext) {
+        const next = await syncTry({ arrNext, intNextLen, intNextCursor });
         return next;
       }
       return true;
     })
     .catch(async () => {
+      if (!arrCatch || !arrCatch.length) {
+        return false;
+      }
       const catchAll = await catchProcess({
         arrNext,
         intNextLen,
         arrCatch,
-        intCatchLen
+        intCatchLen,
+        intCatchCursor
       });
+  
       if (catchAll) {
-        if (arrNext && arrNext.length) {
-          const next = await syncTry({ arrNext, intNextLen });
+        if (isNext) {
+          const next = await syncTry({ arrNext, intNextLen, intNextCursor });
           return next;
         }
         return true;
@@ -195,8 +212,9 @@ syncTry = async ({ arrNext, intNextLen }) => {
 
 sync = async arrNext => {
   const cloneArrNext = shallowCloneArrObjCMD(arrNext);
+  const intNextCursor = 0;
   const intNextLen = cloneArrNext.length;
-  const isComplete = await syncTry({ arrNext: cloneArrNext, intNextLen });
+  const isComplete = await syncTry({ arrNext: cloneArrNext, intNextLen, intNextCursor });
   return isComplete;
 };
 

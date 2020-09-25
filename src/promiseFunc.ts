@@ -8,6 +8,7 @@ export const handleFuncAsResult: THandleFuncResult = (result, resolve, reject) =
       reject({ error: Error('You have not supplied a success or error response in your function.')});
     }
   } catch (err) { // Todo: test edgecase
+    /* istanbul ignore next */
     reject({ error: err });
   }
 };

@@ -1,5 +1,5 @@
 import { handleExecOut } from 'src/promiseExec';
-import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry} from 'src/sync';
+import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry, shallowCloneArrObjCMD } from 'src/sync';
 
 export type TResponse = IExecOutput | void;
 
@@ -40,7 +40,7 @@ describe('utils', () => {
       const intNextLen: number = arrNext.length;
       const intCatchLen: number = arrCatch.length;
 
-      await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen })
+      await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor: 0 })
         .then(() => {
           expect(true).toBe(true);
         })
@@ -54,7 +54,7 @@ describe('utils', () => {
       const intNextLen: number = arrNext.length;
       const intCatchLen: number = arrCatch.length;
 
-      await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen })
+      await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor: 0 })
         .then(() => {
           expect(true).toBe(false);
         })
@@ -104,17 +104,6 @@ describe('utils', () => {
       };
       let success: boolean = false;
       await customProcess(objCMD)
-        .then(() => {
-          success = true;
-        })
-        .catch(err => {
-          success = false;
-          expect(success).toBe(false);
-        });
-    });
-    it('should run fail cmd if no objCMD', async () => {
-      let success: boolean = false;
-      await customProcess(undefined)
         .then(() => {
           success = true;
         })
@@ -210,8 +199,48 @@ describe('utils', () => {
     });
     it('should pass to next in array and complete all processes', async () => {
       const arrNext: IObjCMD[] = [{ cmd: 'echo steve' }, { cmd: 'echo steve' }];
-      const result = await syncTry({ arrNext, intNextLen: arrNext.length });
+      const result = await syncTry({ arrNext, intNextLen: arrNext.length, intNextCursor: 0 });
       expect(result).toBe(true);
     });
   });
+  describe('shallowCloneArrObjCMD', () => {
+    
+// shallowCloneArrObjCMD () - notes:
+//   Will only clone single level - [{key: value, catch: [{key: value}]}]
+//   Won't clone deeper level - [{key: {deepkey: value}, catch: [{key: {deepkey: value}}]}]
+//   it will nested catch - [{key: {deepkey: value}, catch: [{catch [{deepkey: value}]}]}]
+
+    it('should clone array - no catch', () => {
+      const obj: IObjCMD[] = [{
+        cmd: 'echo hello',
+      }, {
+        cmd: 'echo hello',
+      }];
+      expect(shallowCloneArrObjCMD(obj)).toEqual(obj);
+    });
+    it('should clone array - with catch', () => {
+      const obj: IObjCMD[] = [{
+        cmd: 'echo start',
+        catch: [{
+          func: () => ({success: 'true'})
+        }, {
+          cmd: 'echo middle'
+        }, {
+          cmd: 'echo end',
+          msg: 'something else'
+        }]
+      }];
+      expect(shallowCloneArrObjCMD(obj)).toEqual(obj);
+    });
+    it('should clone array - with catch has catch', () => {
+      const obj: IObjCMD[] = [{
+        catch: [{
+          func: () => ({success: 'true'})
+        }, {
+          catch: [{cmd:'echo middle'}]
+        }]
+      }];
+      expect(shallowCloneArrObjCMD(obj)).toEqual(obj);
+    });
+  })
 });
