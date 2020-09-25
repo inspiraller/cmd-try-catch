@@ -5,6 +5,12 @@ interface IObjSuccessOrError {
 
 type TFunc = () => IObjSuccessOrError | TPromiseResponse;
 
-type THandleFunc = (func: TFunc, resolve: TResolveFunc, reject: TRejectFunc) => void;
+// declare namespace promiseFunc {
+//   type IObjCMDFunc = import('./export/sync').IObjCMDFunc;
+// }
+
+type THandleFunc = (objCMD: objCMD.IObjCMDFunc, resolve: TResolveFunc, reject: TRejectFunc) => void;
+
+// type THandleFunc = (func: TFunc, resolve: TResolveFunc, reject: TRejectFunc) => void;
 type THandleFuncResult = (result: IObjSuccessOrError, resolve: TResolveFunc, reject: TRejectFunc) => void;
 type THandleFuncAsPromise = (response: TPromiseResponse, resolve: TResolveFunc, reject: TRejectFunc) => void;

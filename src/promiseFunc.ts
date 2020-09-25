@@ -23,8 +23,8 @@ export const handleFuncAsPromise: THandleFuncAsPromise = (response, resolve, rej
   });
 };
 
-export const handleFunc: THandleFunc = (func, resolve, reject) => {
-  const response: IObjSuccessOrError | TPromiseResponse = func();
+export const handleFunc: THandleFunc = (objCMD, resolve, reject) => {
+  const response: IObjSuccessOrError | TPromiseResponse = objCMD.func();
   if (response instanceof Promise) {
     handleFuncAsPromise(response, resolve, reject);
   } else {
@@ -32,3 +32,4 @@ export const handleFunc: THandleFunc = (func, resolve, reject) => {
     handleFuncAsResult(result, resolve, reject);
   }
 };
+

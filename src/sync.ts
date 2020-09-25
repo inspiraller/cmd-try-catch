@@ -5,13 +5,9 @@ import { handleFunc } from './promiseFunc';
 import chalk from 'chalk';
 import print from './print';
 
-export interface IObjCMD {
-  msg?: string;
-  cmd?: string;
-  func?: TFunc;
-  catch?: IObjCMD[];
-  complete?: IObjSuccessOrError
-}
+export type IObjCMD = objCMD.IObjCMD;
+export type IObjCMDFunc = objCMD.IObjCMDFunc;
+
 // IObjCMD
 interface ISync {
   arrNext: IObjCMD[];
@@ -104,7 +100,7 @@ export const customProcess: TProcess = (objCMD, opt = {}) =>
   new Promise((resolve, reject) => {
     // const func: TFunc | undefined = objCMD && objCMD.func;
     if (objCMD.func) {
-      handleFunc(objCMD.func, resolve, reject);
+      handleFunc(objCMD as IObjCMDFunc, resolve, reject);
     } else {
       exec(objCMD.cmd as string, opt, handleExecOut(resolve, reject));
     }
