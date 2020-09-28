@@ -20,21 +20,25 @@ export type TPromiseResponse = Promise<IObjSuccess>;
 
 /* exec */
 export type THandleExecOut = (
+  objCMD: IObjCMDExec,
   resolve: TResolveFunc,
   reject: TRejectFunc
 ) => TExecOut;
 
-export type TPromiseExec = (cmd: string, opt?: ExecOptions) => TPromiseResponse;
+export type TPromiseExec = (objCMD: IObjCMDExec, opt?: ExecOptions) => TPromiseResponse;
 
 /* promiseFunc */
 export type TFunc = () => IObjSuccessOrError | TPromiseResponse;
 export type THandleFunc = (objCMD: IObjCMDFunc, resolve: TResolveFunc, reject: TRejectFunc) => void;
 export type THandleFuncResult = (
+  objCMD: IObjCMD,
   result: IObjSuccessOrError,
   resolve: TResolveFunc,
   reject: TRejectFunc
 ) => void;
+
 export type THandleFuncAsPromise = (
+  objCMD: IObjCMD,
   response: TPromiseResponse,
   resolve: TResolveFunc,
   reject: TRejectFunc
@@ -44,6 +48,12 @@ export type THandleFuncAsPromise = (
 export interface IObjCMDFunc {
   msg?: string;
   func: TFunc;
+  complete?: IObjSuccessOrError
+}
+
+export interface IObjCMDExec {
+  msg?: string;
+  cmd: string;
   complete?: IObjSuccessOrError
 }
 
@@ -59,3 +69,35 @@ export interface IObjSuccessOrError {
   success?: IObjSuccess['success'];
   error?: IObjError['error'];
 }
+
+interface ISync {
+  arrNext: IObjCMD[];
+}
+
+export type ISyncReturn = {
+  isComplete: boolean;
+  map: IObjCMD[];
+}
+
+interface ISyncTry extends ISync {
+  intNextCursor: number;
+  intNextLen: number;
+  arrCatch?: IObjCMD[];
+  intCatchLen?: number;
+}
+
+interface ISyncCatch extends ISync {
+  intCatchCursor: number;
+  intNextLen: number;
+  arrCatch: IObjCMD[];
+  intCatchLen: number;
+}
+
+export type TSync = (arrNext: ISync['arrNext']) => Promise<ISyncReturn>;
+
+export type TSyncTry = (props: ISyncTry) => Promise<boolean>;
+export type TSyncCatch = (props: ISyncCatch) => Promise<boolean>;
+
+export type TProcess = (objCMD: IObjCMD, opt?: ExecOptions) => TPromiseResponse;
+
+export type TGetMsg = (objCMD: IObjCMD) => string;

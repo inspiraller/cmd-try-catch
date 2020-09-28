@@ -1,5 +1,6 @@
+import util from 'util';
+import {TFunc, ISyncReturn} from 'src/types';
 import sync from 'src/sync';
-import {TFunc} from 'src/types';
 
 const mock1Success: TFunc = () => (
   {
@@ -55,10 +56,8 @@ const mock7Success: TFunc = () => new Promise (resolve => {
   }, 2000);
 });
 
-let isComplete: boolean = false;
-
 const init =  async () => {
-    isComplete = await sync([
+  const synced: ISyncReturn = await sync([
       {
         func: mock1Success,
         catch: [
@@ -85,6 +84,10 @@ const init =  async () => {
         func: mock7Success
       }
     ]);
+  const { isComplete, map } = synced;
+
+  console.log('isComplete = ', isComplete);
+  console.log('map = ', util.inspect(map, true, 4));
 };
 
 init();

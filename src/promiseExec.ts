@@ -1,24 +1,28 @@
-
 import { exec } from 'child_process';
-import { THandleExecOut, TPromiseExec } from './types';
+import { IObjError, IObjSuccess, THandleExecOut, TPromiseExec } from './types';
 
 import print from './print';
 
-export const handleExecOut: THandleExecOut = (resolve, reject) => (
+export const handleExecOut: THandleExecOut = (objCMD, resolve, reject) => (
   error,
   stdout,
   stderr
 ) => {
   if (error) {
+    const objError: IObjError = { error };
+    objCMD.complete = objError;
     print(String(error), 'red');
     reject({ error });
   } else {
-    resolve({ success: stdout || stderr });
+    const objSuccess: IObjSuccess = { success: stdout || stderr };
+    objCMD.complete = objSuccess;
+    resolve(objSuccess);
   }
 };
 
-const promiseExec: TPromiseExec = (cmd, opt = {}) => new Promise((resolve, reject) => {
-  exec(cmd, opt, handleExecOut(resolve, reject));
-});
+const promiseExec: TPromiseExec = (objCMD, opt = {}) =>
+  new Promise((resolve, reject) => {
+    exec(objCMD.cmd, opt, handleExecOut(objCMD, resolve, reject));
+  });
 
 export default promiseExec;

@@ -1,4 +1,4 @@
-import {THandleFunc} from './types';
+import { IObjSuccess, IObjError, THandleFunc } from './types';
 import {
   IExecOutput,
   IObjSuccessOrError,
@@ -7,38 +7,56 @@ import {
   THandleFuncAsPromise
 } from './types';
 
-export const handleFuncAsResult: THandleFuncResult = (result, resolve, reject) => {
+export const handleFuncAsResult: THandleFuncResult = (objCMD, result, resolve, reject) => {
   try {
     if (result.success) {
-      resolve({ success: result.success });
+      const objSuccess: IObjSuccess = result as IObjSuccess;
+      objCMD.complete = objSuccess;
+      resolve(objSuccess);
+
     } else if (result.error) {
-      reject({ error: result.error });
+      const objError: IObjError = result as IObjError;
+      objCMD.complete = objError;
+      reject(objError);
+
     } else {
-      reject({ error: Error('You have not supplied a success or error response in your function.')});
+      const objError: IObjError = {
+        error: Error('You have not supplied a success or error response in your function.')
+      };
+      objCMD.complete = objError;
+      reject(objError);
+  
     }
-  } catch (err) { // Todo: test edgecase
+  } catch (err) {
+    const objError: IObjError = {
+      error: err
+    };
+    objCMD.complete = objError;
+    // Todo: test edgecase
     /* istanbul ignore next */
-    reject({ error: err });
+    reject(objError);
   }
 };
 
-export const handleFuncAsPromise: THandleFuncAsPromise = (response, resolve, reject) => {
+export const handleFuncAsPromise: THandleFuncAsPromise = (objCMD, response, resolve, reject) => {
   response
-  .then(result => {
-    resolve(result);
-  })
-  .catch((err: IExecOutput['error']) => {
-    reject({ error: err });
-  });
+    .then(result => {
+      objCMD.complete = result;
+      resolve(result);
+    })
+    .catch((err: IExecOutput['error']) => {
+      const objError: IObjError = { error: err };
+      objCMD.complete = objError
+      reject(objError);
+    });
 };
 
 export const handleFunc: THandleFunc = (objCMD, resolve, reject) => {
   const response: IObjSuccessOrError | TPromiseResponse = objCMD.func();
   if (response instanceof Promise) {
-    handleFuncAsPromise(response, resolve, reject);
+    handleFuncAsPromise(objCMD, response, resolve, reject);
   } else {
     const result: IObjSuccessOrError = response;
-    handleFuncAsResult(result, resolve, reject);
+    handleFuncAsResult(objCMD, result, resolve, reject);
   }
 };
-

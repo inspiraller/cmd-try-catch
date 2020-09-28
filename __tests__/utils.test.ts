@@ -1,7 +1,6 @@
 import { handleExecOut } from 'src/promiseExec';
-import sync, { IObjCMD, customProcess, getPosOfLen, catchProcess, syncTry, shallowCloneArrObjCMD } from 'src/sync';
-
-export type TResponse = IExecOutput | void;
+import { TError, IObjCMD, TSTDOut, TExecOut, TFunc } from 'src/types';
+import sync, { customProcess, getPosOfLen, catchProcess, syncTry, shallowCloneArrObjCMD } from 'src/sync';
 
 // troubleshoot - testing:
 // https://github.com/nodejs/node-v0.x-archive/issues/25895
@@ -15,7 +14,7 @@ export type TResponse = IExecOutput | void;
 
 const resolve = jest.fn();
 const reject = jest.fn();
-const processResponse: TExecOut = handleExecOut(resolve, reject);
+const processResponse: TExecOut = handleExecOut({cmd: 'echo steve'}, resolve, reject);
 
 const timer: TFunc = () => new Promise(resolve => {
   setTimeout(() => {

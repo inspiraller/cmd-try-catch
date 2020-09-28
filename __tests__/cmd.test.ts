@@ -1,24 +1,24 @@
+import { ISyncReturn } from 'src/types';
 import sync from 'src/sync';
 
-
-let isComplete: boolean = false;
+let objReturn: ISyncReturn;
 
 describe('sync - cmd', () => {
   describe('error', () => {
     beforeAll( async() => {
-      isComplete = await sync([
+      objReturn = await sync([
         {
           cmd: 'some error'
         }
       ]);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('error - success, error', () => {
     beforeAll( async() => {
-      isComplete = await sync([
+      objReturn = await sync([
         {
           cmd: 'some error1',
           catch: [
@@ -33,13 +33,13 @@ describe('sync - cmd', () => {
       ]);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe(' success, error - error', () => {
     beforeAll( async() => {
 
-      isComplete = await sync([
+      objReturn = await sync([
         {
           cmd: 'echo success'
         },
@@ -57,24 +57,24 @@ describe('sync - cmd', () => {
       ]);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('success', () => {
     beforeAll( async() => {
-      isComplete = await sync([
+      objReturn = await sync([
         {
           cmd: 'echo success'
         }
       ]);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
   describe('success, success', () => {
     beforeAll( async() => {
-      isComplete = await sync([
+      objReturn = await sync([
         {
           cmd: 'echo success1'
         },
@@ -84,12 +84,12 @@ describe('sync - cmd', () => {
       ]);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
   describe('success, error - success', () => {
     beforeAll( async() => {
-      isComplete = await sync([
+      objReturn = await sync([
         {
           cmd: 'echo success1'
         },
@@ -104,12 +104,12 @@ describe('sync - cmd', () => {
       ]);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
   describe('error - success, success', () => {
     beforeAll( async() => {
-      isComplete = await sync([
+      objReturn = await sync([
         {
           cmd: 'some error',
           catch: [
@@ -124,7 +124,7 @@ describe('sync - cmd', () => {
       ]);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
 });

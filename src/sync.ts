@@ -1,42 +1,21 @@
-import { exec, ExecOptions } from 'child_process';
+import { exec } from 'child_process';
 import { handleExecOut } from './promiseExec';
-import {handleFunc} from './promiseFunc';
+import { handleFunc } from './promiseFunc';
 
 import {
-  TPromiseResponse,
   IObjCMD,
-  IObjCMDFunc
+  IObjCMDFunc, 
+  IObjCMDExec,
+  TProcess,
+  TGetMsg,
+  TSync,
+  TSyncTry,
+  TSyncCatch
 } from './types';
 
 import chalk from 'chalk';
 import print from './print';
 
-// IObjCMD
-interface ISync {
-  arrNext: IObjCMD[];
-}
-
-interface ISyncTry extends ISync {
-  intNextCursor: number;
-  intNextLen: number;
-  arrCatch?: IObjCMD[];
-  intCatchLen?: number;
-}
-
-interface ISyncCatch extends ISync {
-  intCatchCursor: number;
-  intNextLen: number;
-  arrCatch: IObjCMD[];
-  intCatchLen: number;
-}
-
-type TSync = (arrNext: ISync['arrNext']) => Promise<boolean>;
-type TSyncTry = (props: ISyncTry) => Promise<boolean>;
-type TSyncCatch = (props: ISyncCatch) => Promise<boolean>;
-
-type TProcess = (objCMD: IObjCMD, opt?: ExecOptions) => TPromiseResponse;
-
-type TGetMsg = (objCMD: IObjCMD) => string;
 
 // #########################################################################################
 // code
@@ -102,7 +81,7 @@ export const customProcess: TProcess = (objCMD, opt = {}) =>
     if (objCMD.func) {
       handleFunc(objCMD as IObjCMDFunc, resolve, reject);
     } else {
-      exec(objCMD.cmd as string, opt, handleExecOut(resolve, reject));
+      exec(objCMD.cmd as string, opt, handleExecOut(objCMD as IObjCMDExec, resolve, reject));
     }
   });
 
@@ -211,7 +190,10 @@ sync = async arrNext => {
   const intNextCursor = 0;
   const intNextLen = cloneArrNext.length;
   const isComplete = await syncTry({ arrNext: cloneArrNext, intNextLen, intNextCursor });
-  return isComplete;
+  return {
+    map: cloneArrNext,
+    isComplete
+  };
 };
 
 export { syncTry, syncCatch, catchProcess };

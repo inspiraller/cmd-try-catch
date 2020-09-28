@@ -1,3 +1,4 @@
+import {TPromiseResponse, IObjSuccessOrError, ISyncReturn} from 'src/types';
 import sync from 'src/sync';
 
 const mockPromiseError = jest.fn<TPromiseResponse, any>(() => new Promise ((_, reject) => {
@@ -52,13 +53,13 @@ const mockFuncNoSuccesOrError = jest.fn<IObjSuccessOrError, any>(() => (
 ));
 
 
-let isComplete: boolean = false;
+let objReturn: ISyncReturn;
 
 describe('sync - func', () => {
   describe('error', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockError1
         }
@@ -68,13 +69,13 @@ describe('sync - func', () => {
       expect(mockError1.mock.calls.length).toBe(1);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('Promise - error', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockPromiseError
         }
@@ -84,13 +85,13 @@ describe('sync - func', () => {
       expect(mockPromiseError.mock.calls.length).toBe(1);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('error - success, error', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockError1,
           catch: [
@@ -114,13 +115,13 @@ describe('sync - func', () => {
       expect(mockError2.mock.calls.length).toBe(1);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('success, error - error', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockSuccess1
         },
@@ -150,13 +151,13 @@ describe('sync - func', () => {
       expect(mockSuccess2.mock.calls.length).toBe(0);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('handleFunc - unexpected error', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockFuncNoSuccesOrError // forcing unexpected error!
         }
@@ -166,13 +167,13 @@ describe('sync - func', () => {
       expect(mockFuncNoSuccesOrError.mock.calls.length).toBe(1);
     });
     it('should not complete', () => {
-      expect(isComplete).toBe(false);
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('success', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockSuccess1
         }
@@ -182,13 +183,13 @@ describe('sync - func', () => {
       expect(mockSuccess1.mock.calls.length).toBe(1);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
   describe('Promise - success', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockPromiseSuccess
         }
@@ -198,13 +199,13 @@ describe('sync - func', () => {
       expect(mockPromiseSuccess.mock.calls.length).toBe(1);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
   describe('success, success', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockSuccess1
         },
@@ -220,13 +221,13 @@ describe('sync - func', () => {
       expect(mockSuccess2.mock.calls.length).toBe(1);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
   describe('success, error - success', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockSuccess1
         },
@@ -250,13 +251,13 @@ describe('sync - func', () => {
       expect(mockSuccess2.mock.calls.length).toBe(1);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
   describe('error - success, success', () => {
     beforeAll( async() => {
       jest.clearAllMocks();
-      isComplete = await sync([
+      objReturn = await sync([
         {
           func: mockError1,
           catch: [
@@ -280,7 +281,7 @@ describe('sync - func', () => {
       expect(mockSuccess2.mock.calls.length).toBe(1);
     });
     it('should complete', () => {
-      expect(isComplete).toBe(true);
+      expect(objReturn.isComplete).toBe(true);
     });
   });
 });
