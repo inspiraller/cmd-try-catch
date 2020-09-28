@@ -1,3 +1,12 @@
+import {THandleFunc} from './types';
+import {
+  IExecOutput,
+  IObjSuccessOrError,
+  TPromiseResponse,
+  THandleFuncResult,
+  THandleFuncAsPromise
+} from './types';
+
 export const handleFuncAsResult: THandleFuncResult = (result, resolve, reject) => {
   try {
     if (result.success) {

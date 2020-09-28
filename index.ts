@@ -1,4 +1,6 @@
 import sync from 'src/sync';
+import {TFunc} from 'src/types';
+
 const mock1Success: TFunc = () => (
   {
     success: 'mock1Success'

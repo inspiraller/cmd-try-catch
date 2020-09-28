@@ -1,12 +1,15 @@
 import { exec, ExecOptions } from 'child_process';
 import { handleExecOut } from './promiseExec';
-import { handleFunc } from './promiseFunc';
+import {handleFunc} from './promiseFunc';
+
+import {
+  TPromiseResponse,
+  IObjCMD,
+  IObjCMDFunc
+} from './types';
 
 import chalk from 'chalk';
 import print from './print';
-
-export type IObjCMD = objCMD.IObjCMD;
-export type IObjCMDFunc = objCMD.IObjCMDFunc;
 
 // IObjCMD
 interface ISync {
@@ -31,10 +34,7 @@ type TSync = (arrNext: ISync['arrNext']) => Promise<boolean>;
 type TSyncTry = (props: ISyncTry) => Promise<boolean>;
 type TSyncCatch = (props: ISyncCatch) => Promise<boolean>;
 
-type TProcess = (
-  objCMD: IObjCMD,
-  opt?: ExecOptions
-) => TPromiseResponse;
+type TProcess = (objCMD: IObjCMD, opt?: ExecOptions) => TPromiseResponse;
 
 type TGetMsg = (objCMD: IObjCMD) => string;
 
@@ -192,7 +192,7 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
         intCatchLen,
         intCatchCursor
       });
-  
+
       if (catchAll) {
         if (isNext) {
           const next = await syncTry({ arrNext, intNextLen, intNextCursor });

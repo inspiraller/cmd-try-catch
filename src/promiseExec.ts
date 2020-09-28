@@ -1,5 +1,6 @@
 
 import { exec } from 'child_process';
+import { THandleExecOut, TPromiseExec } from './types';
 
 import print from './print';
 
