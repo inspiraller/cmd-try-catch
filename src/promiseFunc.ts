@@ -28,12 +28,11 @@ export const handleFuncAsResult: THandleFuncResult = (objCMD, result, resolve, r
   
     }
   } catch (err) {
+    /* istanbul ignore next */
     const objError: IObjError = {
       error: err
     };
     objCMD.complete = objError;
-    // Todo: test edgecase
-    /* istanbul ignore next */
     reject(objError);
   }
 };
