@@ -61,8 +61,12 @@ export interface IObjCMD {
   msg?: IObjCMDFunc['msg'];
   cmd?: string;
   func?: IObjCMDFunc['func'];
-  catch?: IObjCMD[];
+  catch?: IObjCMDCatch[];
   complete?: IObjSuccessOrError
+}
+
+export interface IObjCMDCatch extends IObjCMD {
+  troubleshoot?: string | RegExp
 }
 
 export interface IObjSuccessOrError {

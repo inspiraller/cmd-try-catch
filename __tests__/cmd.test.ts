@@ -41,12 +41,12 @@ describe('sync - cmd', () => {
     });
     it('map response should match', () => {
       expect(stripMap(objReturn.map)).toMatchObject([{
-        complete: false,
+        complete: false, // gets retried
         catch: [{
           complete: true
         }]
       }, {
-        complete: false
+        complete: null
       }]);
     });
   });
@@ -128,8 +128,8 @@ describe('sync - cmd', () => {
         }
       ]);
     });
-    it('should complete', () => {
-      expect(objReturn.isComplete).toBe(true);
+    it('should not complete', () => {
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('error - success, success', () => {
@@ -148,8 +148,8 @@ describe('sync - cmd', () => {
         }
       ]);
     });
-    it('should complete', () => {
-      expect(objReturn.isComplete).toBe(true);
+    it('should not complete', () => {
+      expect(objReturn.isComplete).toBe(false);
     });
   });
 });

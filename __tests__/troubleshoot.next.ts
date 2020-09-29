@@ -17,6 +17,11 @@ describe('sync - usecase', () => {
         {
           func: getUrlDockerTutorial,
           catch: [{
+            cmd: 'some error'
+          }, {
+            cmd: 'some error'
+          }, {
+            troubleshoot: /url\:\s\"http\:\/\/localhost\/tutorial\"\sdoes\snot\sexist/,
             cmd: `docker run -d -p 80:80 --name ${id} docker/getting-started`
           }]
         }

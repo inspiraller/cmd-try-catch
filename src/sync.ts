@@ -4,6 +4,7 @@ import { handleFunc } from './promiseFunc';
 
 import {
   IObjCMD,
+  IObjCMDCatch,
   IObjCMDFunc, 
   IObjCMDExec,
   TProcess,
@@ -135,15 +136,20 @@ syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor 
   return catchAll;
 };
 
+type TGetNext = (arrNext: IObjCMD[], intNextCursor: number) => boolean;
+const getNext: TGetNext = (arrNext, intNextCursor) => intNextCursor < arrNext.length;
+
+type TGetCatchCursor = (arrCatch: IObjCMDCatch[]) => number;
+const getCatchCursor: TGetCatchCursor = arrCatch => (
+  arrCatch && arrCatch.length && arrCatch.findIndex((objCMD: IObjCMDCatch) => objCMD.complete === undefined)
+);
+
 syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
   const strMsg = getMsg(arrNext[intNextCursor]);
   /* istanbul ignore next */
   printTryCatch(true, arrNext, intNextLen, strMsg);
 
   const objCMD = arrNext[intNextCursor];
-  intNextCursor += 1;
-  const isNext = intNextCursor < arrNext.length;
-
   if (!objCMD || !(objCMD.cmd || objCMD.func)) {
     /* istanbul ignore next */
     print('Array has no objCMD', 'red');
@@ -151,18 +157,18 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
   }
   const arrCatch = objCMD.catch;
   const intCatchLen = (arrCatch && arrCatch.length) || 0;
-  const intCatchCursor = 0;
+  const intCatchCursor = getCatchCursor(arrCatch || []);
 
   const tryAll = await customProcess(objCMD)
     .then(async () => {
-      if (isNext) {
-        const next = await syncTry({ arrNext, intNextLen, intNextCursor });
+      if (getNext(arrNext, intNextCursor + 1)) {
+        const next = await syncTry({ arrNext, intNextLen, intNextCursor: intNextCursor + 1});
         return next;
       }
       return true;
     })
     .catch(async () => {
-      if (!arrCatch || !arrCatch.length) {
+      if ((!arrCatch || !arrCatch.length) || intCatchCursor === -1) {
         return false;
       }
       const catchAll = await catchProcess({
@@ -174,11 +180,8 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
       });
 
       if (catchAll) {
-        if (isNext) {
-          const next = await syncTry({ arrNext, intNextLen, intNextCursor });
-          return next;
-        }
-        return true;
+        const next = await syncTry({ arrNext, intNextLen, intNextCursor });
+        return next;
       }
       return false;
     });

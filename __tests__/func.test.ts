@@ -105,14 +105,14 @@ describe('sync - func', () => {
         }
       ]);
     });
-    it('should have called - mockError1 - once', () => {
-      expect(mockError1.mock.calls.length).toBe(1);
+    it('should have called - mockError1 - twice', () => {
+      expect(mockError1.mock.calls.length).toBe(2);
     });
     it('should have called - mockSuccess2 - once', () => {
       expect(mockSuccess2.mock.calls.length).toBe(1);
     });
-    it('should have called - mockError2 - once', () => {
-      expect(mockError2.mock.calls.length).toBe(1);
+    it('should not have called - mockError2', () => {
+      expect(mockError2.mock.calls.length).toBe(0);
     });
     it('should not complete', () => {
       expect(objReturn.isComplete).toBe(false);
@@ -244,14 +244,14 @@ describe('sync - func', () => {
     it('should have called - mockSuccess1 - once', () => {
       expect(mockSuccess1.mock.calls.length).toBe(1);
     });
-    it('should have called - mockError1 - once', () => {
-      expect(mockError1.mock.calls.length).toBe(1);
+    it('should have called - mockError1 - twice', () => {
+      expect(mockError1.mock.calls.length).toBe(2);
     });
     it('should have called - mockSuccess2 - once', () => {
       expect(mockSuccess2.mock.calls.length).toBe(1);
     });
-    it('should complete', () => {
-      expect(objReturn.isComplete).toBe(true);
+    it('should not complete', () => {
+      expect(objReturn.isComplete).toBe(false);
     });
   });
   describe('error - success, success', () => {
@@ -271,17 +271,17 @@ describe('sync - func', () => {
         }
       ]);
     });
-    it('should have called - mockError1 - once', () => {
-      expect(mockError1.mock.calls.length).toBe(1);
+    it('should have called - mockError1 - twice', () => {
+      expect(mockError1.mock.calls.length).toBe(2);
     });
     it('should have called - mockSuccess1 - once', () => {
-      expect(mockSuccess2.mock.calls.length).toBe(1);
+      expect(mockSuccess1.mock.calls.length).toBe(1);
     });
-    it('should have called - mockSuccess2 - once', () => {
-      expect(mockSuccess2.mock.calls.length).toBe(1);
+    it('should not have called - mockSuccess2', () => {
+      expect(mockSuccess2.mock.calls.length).toBe(0);
     });
-    it('should complete', () => {
-      expect(objReturn.isComplete).toBe(true);
+    it('should not complete', () => {
+      expect(objReturn.isComplete).toBe(false);
     });
   });
 });

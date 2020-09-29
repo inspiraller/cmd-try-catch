@@ -12,18 +12,24 @@ const urlExistPromise: TUrlExistPromise = async url =>
       });
     } else {
       reject({
-        error: Error(`does not exist -${url}`)
+        error: Error(`url: "${url}" does not exist`)
       })
     }
   });
 
 export default urlExistPromise;
 
-// const init = async () => {
-//   const result = await urlExistPromise('http://localhost/tutorial');
-//   console.log('result = ', result);
-// }
-// init();
+/* 
+// usecase 
+ 
+import urlExistPromise from '__tests__/utils/urlExistPromise';
 
-// module.exports = urlExistPromise;
+const init = async () => {
+  const exist: IObjSuccessOrError | void = await urlExistPromise('http://localhost/tutorial').catch(err => {
+    console.log('err = ', err);
+  });
+  console.log('exist =', exist);
+}
 
+init();
+ */

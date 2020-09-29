@@ -1,6 +1,6 @@
 {
   "name": "cmd-try-catch",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "cmd try catch",
   "author": "Steve Tomlin",
   "private": true,
@@ -79,6 +79,7 @@
     "sonar": "rimraf .scannerwork && node node_modules/sonarqube-scanner/dist/bin/sonar-scanner",
     "start-tsnode": "cross-env NODE_ENV=development nodemon -r dotenv/config index.ts 'index.ts' --exec 'ts-node' index.ts -e ts,tsx ts-node/register",
     "start-babel": "cross-env NODE_ENV=development nodemon index.ts --exec babel-node --extensions '.ts,.tsx' index.ts -r dotenv/config index.ts",
-    "start": "npm run start-babel"
+    "start": "npm run start-babel",
+    "testurl": "cross-env NODE_ENV=development nodemon testurl.ts --exec babel-node --extensions '.ts,.tsx' testurl.ts -r dotenv/config testurl.ts"
   }
 }

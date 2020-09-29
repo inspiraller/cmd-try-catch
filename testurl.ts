@@ -1,17 +1,11 @@
-import http from 'http';
-import { TFunc } from 'src/types';
+import { IObjSuccessOrError } from 'src/types';
+import urlExistPromise from '__tests__/utils/urlExistPromise';
 
-const options = {method: 'HEAD', host: 'localhost', port: 80, path: '/tutorial'};
-
-const func: TFunc = () => new Promise (resolve => {
-  const req = http.request(options, (r) => {
-    console.log('r = ', r);
-    resolve({success: 'true'});
-    // reject({
-    //   error: Error('whatever')
-    // }
+const init = async () => {
+  const exist: IObjSuccessOrError | void = await urlExistPromise('http://localhost/tutorial').catch(err => {
+    console.log('err = ', err);
   });
-  req.end();
-});
+  console.log('exist =', exist);
+}
 
-func();
+init();

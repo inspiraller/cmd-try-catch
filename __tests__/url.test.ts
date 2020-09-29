@@ -14,7 +14,7 @@ describe('sync - urlExistPromise', () => {
       }
     ]);
   });
-  it('should complete', () => {
-    expect(objReturn.isComplete).toBe(true);
+  it('should not complete', () => {
+    expect(objReturn.isComplete).toBe(false);
   });
 });

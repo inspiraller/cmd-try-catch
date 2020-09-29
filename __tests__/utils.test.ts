@@ -1,5 +1,5 @@
 import { handleExecOut } from 'src/promiseExec';
-import { TError, IObjCMD, TSTDOut, TExecOut, TFunc } from 'src/types';
+import { TError, IObjCMD, TSTDOut, TExecOut, TFunc, ISyncReturn } from 'src/types';
 import sync, { customProcess, getPosOfLen, catchProcess, syncTry, shallowCloneArrObjCMD } from 'src/sync';
 
 // troubleshoot - testing:
@@ -32,30 +32,24 @@ describe('utils', () => {
     it('should run through all catch statements and return "then" method successfullly', async () => {
       const arrNext: IObjCMD[] = [{ cmd: 'do thing' }, { cmd: 'do thing' }];
       const arrCatch: IObjCMD[] = [
-        { cmd: 'do catch thing 1' },
-        { cmd: 'do catch thing 2' },
-        { cmd: 'do catch thing 3' }
+        { cmd: 'echo 1' },
+        { cmd: 'echo 2' },
+        { cmd: 'echo 3' }
       ];
       const intNextLen: number = arrNext.length;
       const intCatchLen: number = arrCatch.length;
-
-      await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor: 0 })
-        .then(() => {
-          expect(true).toBe(true);
-        })
-        .catch(err => {
-          expect(true).toBe(false);
-        });
+      const result: boolean | void = await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor: 0 });
+      expect(result).toBe(true);
     });
     it('should fail catch if no arrCatch exists', async () => {
-      const arrNext: IObjCMD[] = [{ cmd: 'do thing' }, { cmd: 'do thing' }];
+      const arrNext: IObjCMD[] = [{ cmd: 'some error' }, { cmd: 'echo 2' }];
       const arrCatch: IObjCMD[] = [];
       const intNextLen: number = arrNext.length;
       const intCatchLen: number = arrCatch.length;
 
       await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor: 0 })
         .then(() => {
-          expect(true).toBe(false);
+          expect(true).toBe(false); // should not get here, and if it does - show error
         })
         .catch(err => {
           expect(true).toBe(true);
@@ -91,7 +85,7 @@ describe('utils', () => {
       await customProcess(objCMD)
         .then(() => {
           success = true;
-          expect(success).toBe(true);
+          expect(success).toBe(true); // todo - move this out of await method
         })
         .catch(err => {
           success = false;
@@ -108,7 +102,7 @@ describe('utils', () => {
         })
         .catch(err => {
           success = false;
-          expect(success).toBe(false);
+          expect(success).toBe(false); // todo - move this out of await method
         });
     });
   });
@@ -133,7 +127,7 @@ describe('utils', () => {
   });
 
   describe('sync', () => {
-    it('should run through sync method and catch methods but result with success', async () => {
+    it('should run through sync method and catch methods and result in fail because 2nd cmd will always fail', async () => {
       const arrNext: IObjCMD[] = [
         { cmd: 'echo 1' },
         {
@@ -146,13 +140,14 @@ describe('utils', () => {
           ]
         }
       ];
-      await sync(arrNext)
-        .then(() => {
-          expect(true).toBe(true);
-        })
-        .catch(err => {
-          expect(true).toBe(false);
-        });
+      const complete: ISyncReturn = await sync(arrNext);
+        // .then(() => {
+        //   expect(true).toBe(true);
+        // })
+        // .catch(err => {
+        //   expect(true).toBe(false);
+        // });
+      expect(complete.isComplete).toBe(false);
     });
     it('should fail if no objCMD exists in array', async () => {
       const arrNext: IObjCMD[] = [{}];
