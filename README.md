@@ -70,3 +70,42 @@ const isComplete = await sync([
   }
 ]);
 ```
+# Test example
+
+```typescript
+import { ISyncReturn } from 'src/types';
+import sync from 'src/sync';
+import stripMap from './utils/stripMap';
+let objReturn: ISyncReturn;
+
+describe('my map of commands', () => {
+  beforeAll(async () => {
+    objReturn = await sync([
+      {
+        cmd: 'some error1',
+        catch: [
+          {
+            cmd: 'echo success'
+          }
+        ]
+      },
+      {
+        cmd: 'some error2'
+      }
+    ]);
+  });
+  it('should not complete', () => {
+    expect(objReturn.isComplete).toBe(false); // all commands have not completed because one failed.
+  });
+  it('map response should match', () => { // This is an example of a map of those commands that failed and those that passed.
+    expect(stripMap(objReturn.map)).toMatchObject([{
+      complete: false, // 1 fail - try the command in the catch method.
+      catch: [{
+        complete: true // 2 success - now go back to the parent and try the next command
+      }]
+    }, {
+      complete: false // 3 fail - no more catch commands exist so - isComplete === false
+    }]);
+  });
+});
+```
