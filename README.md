@@ -4,30 +4,38 @@ This repository enables the ability to provide an array of commands with catch a
 # The reason for this library
 - I want to supply an array of commands that run in sequence, one after the other. 
 - If one of those commands fail then I want to try a series of catch commands.
-- If the a catch command fails, then the next catch command is tried and so on.
-- If a catch command succeeds, then move onto the next try command in the top array.
+- If the catch command fails, then move onto the next catch command. If that catch command succeeds then retry the original command.
+- If the original command passes, then move onto the next top command, otherwise stop the entire sequence.
+- If the original command fails again, then try any remaining untried catch commands. If there are not, then stop the sequence.
+- If all commands in the top list pass then return a success resopnse.
+
+
+move onto the next try command in the top array.
 
 **example:**
 ```typescript
 import sync, {stripMap} from 'sync';
 
 const objResult = sync([{
-  cmd: 'command1Try',
+  // 1 try command1Try, 5 try again
+  cmd: 'command1Try', 
   catch: [{
-     // command1Try failed so try this - command1Catch1 
+     // 2 commandTry1 fails so try this
     cmd: 'command1Catch1'
   }, {
-    // command1Catch1 failed so catch this - command1Catch2 
+    // 3 command1Catch1 fails so try this
     cmd: 'command1Catch2'
   }, {
-     // command1Catch2 failed so catch this - echo catchSuccess
-    cmd: 'echo catchSuccess'
+     // 4 command1Catch2 fails so try this
+    cmd: 'echo catchSuccess' // This succeeds so retry command1Try. 
   }, {
-     // Never gets here because the previous command succeeded.
+     // 6 command1Try fails so try this
     cmd: 'neverGetsToThisCatchCommand'
-  }]
+  }, 
+   // 7 no more catch commands to try, so end sequence
+  ]
 }, {
-  // echo catchSuccess succeeded so try this - echo success
+  // Doesn't reach here because command1Try has failed and there are no catches for it.
   cmd: 'echo success'
 }]);
 
@@ -45,11 +53,11 @@ getMapOfPasses = [
     }, {
       complete: true
     }, {
-      complete: null
+      complete: false
     }],
   },
   {
-    complete: false // 3 fail - no more catch commands exist so - isComplete === false
+    complete: null
   }
 ];
 */
@@ -71,7 +79,7 @@ objSuccessOrError: IObjSuccessOrError  = {
 }
 ```
 
-## example with cmd, func and promise
+## example with func and promise
 ```typescript
 import sync, { TFunc } from 'cmd-try-catch';
 
@@ -104,8 +112,6 @@ const objResult = sync([{
     func: funcPromiseError, 
   }, {
     func: funcPromiseSuccess,
-  }, {
-    cmd: 'neverGetsToThisCatchCommand', // Never gets here because the previous command succeeded.
   }]
 }, {
   func: funcSuccess
@@ -149,12 +155,10 @@ describe('sync - usecase', () => {
     beforeAll(async () => {
       objReturn = await sync([
         {
-          func: getUrlDockerTutorial,
+          func: getUrlDockerTutorial, // 1 first try fails, 3 second try passes
           catch: [{
-            cmd: `docker run -d -p 80:80 --name ${id} docker/getting-started`
+            cmd: `docker run -d -p 80:80 --name ${id} docker/getting-started` // 2 run docker, now retry first command
           }]
-        }, {
-          func: getUrlDockerTutorial
         }
       ]);
     });
