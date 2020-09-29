@@ -6,11 +6,8 @@ This repository enables the ability to provide an array of commands with catch a
 - If one of those commands fail then I want to try a series of catch commands.
 - If the catch command fails, then move onto the next catch command. If that catch command succeeds then retry the original command.
 - If the original command passes, then move onto the next top command, otherwise stop the entire sequence.
-- If the original command fails again, then try any remaining untried catch commands. If there are not, then stop the sequence.
-- If all commands in the top list pass then return a success resopnse.
-
-
-move onto the next try command in the top array.
+- If the original command fails again, then try any remaining untried catch commands. If there are no more catch commands, then stop the sequence.
+- If all commands in the top list pass then return a success response.
 
 **example:**
 ```typescript
@@ -30,7 +27,7 @@ const objResult = sync([{
     cmd: 'echo catchSuccess' // This succeeds so retry command1Try. 
   }, {
      // 6 command1Try fails so try this
-    cmd: 'neverGetsToThisCatchCommand'
+    cmd: 'another error'
   }, 
    // 7 no more catch commands to try, so end sequence
   ]
