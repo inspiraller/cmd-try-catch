@@ -9,19 +9,26 @@ This repository enables the ability to provide an array of commands with catch a
 
 **example:**
 ```typescript
+import sync, {stripMap} from 'sync';
+
 const objResult = sync([{
   cmd: 'command1Try',
   catch: [{
-    cmd: 'command1Catch1', // command1Try failed so try this - command1Catch1 
+     // command1Try failed so try this - command1Catch1 
+    cmd: 'command1Catch1'
   }, {
-    cmd: 'command1Catch2', // command1Catch1 failed so catch this - command1Catch2 
+    // command1Catch1 failed so catch this - command1Catch2 
+    cmd: 'command1Catch2'
   }, {
-    cmd: 'echo catchSuccess', // command1Catch2 failed so catch this - echo catchSuccess
+     // command1Catch2 failed so catch this - echo catchSuccess
+    cmd: 'echo catchSuccess'
   }, {
-    cmd: 'neverGetsToThisCatchCommand', // Never gets here because the previous command succeeded.
+     // Never gets here because the previous command succeeded.
+    cmd: 'neverGetsToThisCatchCommand'
   }]
 }, {
-  cmd: 'echo success' // echo catchSuccess succeeded so try this - echo success
+  // echo catchSuccess succeeded so try this - echo success
+  cmd: 'echo success'
 }]);
 
 const isAllPass = objResult.isComplete;
@@ -48,10 +55,25 @@ getMapOfPasses = [
 */
 ```
 
-# You can supply either a cmd or a function
-**example:**
+# You can supply either a cmd, function or promise - as long as they all return an objectSuccessOrError
+## as success
 ```typescript
-import sync, {TFunc } from 'cmd-try-catch';
+import {IObjSuccessOrError} from 'sync';
+const objSuccessOrError: IObjSuccessOrError = {
+  success: 'some message string'
+}
+```
+## as error
+```typescript
+import {IObjSuccessOrError} from 'sync';
+objSuccessOrError: IObjSuccessOrError  = {
+  error: Error('some error')
+}
+```
+
+## example with cmd, func and promise
+```typescript
+import sync, { TFunc } from 'cmd-try-catch';
 
 const funcPromiseError: TFunc = () => new Promise((resolve, reject => {
   reject({
@@ -92,7 +114,7 @@ const objResult = sync([{
 # Real world usecase
 The real benefit of this is usecases with something like docker, sql, bash scripts etc...
 
-**example:**
+## example usecase
 ```typescript
 import { v4 as uuidv4 } from 'uuid';
 import {exec} from 'child_process';
@@ -145,6 +167,4 @@ describe('sync - usecase', () => {
     });
   });
 });
-
-
 ```
