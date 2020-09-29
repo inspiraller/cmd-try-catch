@@ -32,7 +32,9 @@ export const handleFuncAsResult: THandleFuncResult = (objCMD, result, resolve, r
     const objError: IObjError = {
       error: err
     };
+    /* istanbul ignore next */
     objCMD.complete = objError;
+    /* istanbul ignore next */
     reject(objError);
   }
 };

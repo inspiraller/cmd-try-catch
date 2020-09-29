@@ -62,6 +62,7 @@ export const shallowCloneArrObjCMD = (arrNext: IObjCMD[]) =>
     let objCMD: IObjCMD = current;
     if (current.catch) {
       const { catch: aliasCatch, ...rest } = current;
+      /* istanbul ignore next */
       const arrCatch: IObjCMD[] = aliasCatch ? shallowCloneArrObjCMD(aliasCatch) : [];
       objCMD = { ...rest, catch: arrCatch };
     }
