@@ -17,9 +17,12 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "http": "^0.0.1-security",
     "jest-cucumber": "^3.0.0",
     "jest-mock-console": "^1.0.1",
-    "nodemon": "^1.18.4"
+    "nodemon": "^1.18.4",
+    "url-exist": "^2.0.2",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

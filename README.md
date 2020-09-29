@@ -1,111 +1,150 @@
 # cmd-try-catch description
 This repository enables the ability to provide an array of commands with catch alternatives
 
-# Instructions
-- You supply an array of commands which run either asynchronously or synchronously
-- Each command waits until the other has completed
-- You can supply either a cmd or a function or a promise
-- The function and promise must return an object of either {success: 'some string'}, or {error: Error('some error')}
-- You can also provide an additional - catch, property, so if that command fails then the catch array runs in the same manner.
-- if a catch command fails, then the next on in the catch list is tried, until one catch command succeeds and then this moves onto the next command in the parent list.
-- if there are no more catch commands then the final isComplete message will be false.
+# The reason for this library
+- I want to supply an array of commands that run in sequence, one after the other. 
+- If one of those commands fail then I want to try a series of catch commands.
+- If the a catch command fails, then the next catch command is tried and so on.
+- If a catch command succeeds, then move onto the next try command in the top array.
 
-# Example of an array of commands
+**example:**
 ```typescript
-const isComplete = await sync([
+const objResult = sync([{
+  cmd: 'command1Try',
+  catch: [{
+    cmd: 'command1Catch1', // command1Try failed so try this - command1Catch1 
+  }, {
+    cmd: 'command1Catch2', // command1Catch1 failed so catch this - command1Catch2 
+  }, {
+    cmd: 'echo catchSuccess', // command1Catch2 failed so catch this - echo catchSuccess
+  }, {
+    cmd: 'neverGetsToThisCatchCommand', // Never gets here because the previous command succeeded.
+  }]
+}, {
+  cmd: 'echo success' // echo catchSuccess succeeded so try this - echo success
+}]);
+
+const isAllPass = objResult.isComplete;
+
+const getMapOfPasses = stripMap(objResult.map) 
+/*
+getMapOfPasses = [
   {
-    cmd: 'echo success1', // if this command is successful, and doesn't return an error then the next item in the array will run.
+    complete: false, 
+    catch: [{
+      complete: false 
+    }, {
+      complete: false 
+    }, {
+      complete: true
+    }, {
+      complete: null
+    }],
   },
   {
-    func: exampleFunctionSuccess // this must return either a promise resolving to {success: 'something'} or a function result of the same, in order for the next command to run
-  },
-  {
-    cmd: 'echo success2'
-  },
-  {
-    cmd: 'docker run etc...' // if the final command is succesful then the variable - isComplete === true otherwise its === false
+    complete: false // 3 fail - no more catch commands exist so - isComplete === false
   }
-]);
+];
+*/
 ```
-# Example of an array of commands with catch alternatives 
-```typescript
-import sync, {TFunc} from 'cmd-try-catch';
 
-const exampleFunctionError: TFunc = () => new Promise((resolve, reject => {
-  // my code here...
+# You can supply either a cmd or a function
+**example:**
+```typescript
+import sync, {TFunc } from 'cmd-try-catch';
+
+const funcPromiseError: TFunc = () => new Promise((resolve, reject => {
   reject({
     error: Error('custom error')
   });
 }));
 
-const exampleFunctionSuccess: TFunc = () => new Promise((resolve, reject => {
-  // my code here...
+const funcPromiseSuccess: TFunc = () => new Promise((resolve, reject => {
   resolve({
-    error: Error('custom error')
+    success: 'some message'
   });
 }));
 
-const isComplete = await sync([
-  {
-    cmd: 'some error1', // if error - go to - child catch 1
-    catch: [
-      {
-        cmd: 'some error2' // if error - go to - child catch 2
-      },
-      {
-        cmd: 'echo success1' // if success - go to - next parent
-      }
-    ]
-  },
-  {
-    func: exampleFunctionError, // if error - go to - child catch 1
-    catch: [
-      {
-        cmd: 'echo success' // if success - go to - next parent
-      }
-    ]
-  },
-  {
-    func: exampleFunctionSuccess // if success - isComplete === true
-  }
-]);
+const funcError: TFunc = () => ({
+  error: Error('custom error')
+});
+
+const funcSuccess: TFunc = () => ({
+  success: 'some message'
+});
+
+
+const objResult = sync([{
+  cmd: 'command1Try',
+  catch: [{
+    func: funcError,
+  }, {
+    func: funcPromiseError, 
+  }, {
+    func: funcPromiseSuccess,
+  }, {
+    cmd: 'neverGetsToThisCatchCommand', // Never gets here because the previous command succeeded.
+  }]
+}, {
+  func: funcSuccess
+}]);
 ```
-# Test example
+# Real world usecase
+The real benefit of this is usecases with something like docker, sql, bash scripts etc...
 
+**example:**
 ```typescript
-import { ISyncReturn } from 'src/types';
-import sync from 'src/sync';
-import stripMap from './utils/stripMap';
-let objReturn: ISyncReturn;
+import { v4 as uuidv4 } from 'uuid';
+import {exec} from 'child_process';
+import urlExist from 'url-exist';
 
-describe('my map of commands', () => {
-  beforeAll(async () => {
-    objReturn = await sync([
-      {
-        cmd: 'some error1',
-        catch: [
-          {
-            cmd: 'echo success'
-          }
-        ]
-      },
-      {
-        cmd: 'some error2'
-      }
-    ]);
+import { ISyncReturn , TFunc, TPromiseResponse } from 'src/types';
+import sync from 'src/sync';
+
+
+type TUrlExistPromise = (url: string) => TPromiseResponse;
+const urlExistPromise: TUrlExistPromise = async url =>
+  await new Promise (async (resolve, reject) => {
+    const exist: boolean = await urlExist(url);
+    if (exist) {
+      resolve({
+        success:  url
+      });
+    } else {
+      reject({
+        error: Error(`does not exist -${url}`)
+      })
+    }
   });
-  it('should not complete', () => {
-    expect(objReturn.isComplete).toBe(false); // all commands have not completed because one failed.
-  });
-  it('map response should match', () => { // This is an example of a map of those commands that failed and those that passed.
-    expect(stripMap(objReturn.map)).toMatchObject([{
-      complete: false, // 1 fail - try the command in the catch method.
-      catch: [{
-        complete: true // 2 success - now go back to the parent and try the next command
-      }]
-    }, {
-      complete: false // 3 fail - no more catch commands exist so - isComplete === false
-    }]);
+
+
+let objReturn: ISyncReturn;
+const getUrlDockerTutorial: TFunc = async () => await urlExistPromise('http://localhost/tutorial');
+
+let id: string = uuidv4();
+describe('sync - usecase', () => {
+  describe('Test if docker tutorial is running in localhost. Otherwise catch and run docker getting started, then retest', () => {
+    beforeAll(async () => {
+      objReturn = await sync([
+        {
+          func: getUrlDockerTutorial,
+          catch: [{
+            cmd: `docker run -d -p 80:80 --name ${id} docker/getting-started`
+          }]
+        }, {
+          func: getUrlDockerTutorial
+        }
+      ]);
+    });
+    afterAll(async () => {
+      await exec(`docker stop ${id}`);
+      await exec(`docker rm ${id}`);
+    })
+    it('should complete', () => {
+      expect(objReturn.isComplete).toBe(true);
+    });
   });
 });
+
+
 ```
