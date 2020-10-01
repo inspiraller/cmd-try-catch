@@ -1,5 +1,4 @@
-import { ISyncReturn , TFunc } from 'src/types';
-import sync from 'src/sync';
+import sync, { ISyncReturn , TFunc } from 'src/sync';
 import { urlExistPromiseAsObject } from './utils/urlExistPromise';
 
 const getGoogleUrl: TFunc = async () => await urlExistPromiseAsObject('http://www.google.com');

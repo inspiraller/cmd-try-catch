@@ -11,7 +11,6 @@ module.exports = {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^@/(.*)$': '<rootDir>/$1'
   },
-  setupFiles: ['dotenv/config'],
   moduleDirectories: ['node_modules', 'src', '__tests__'],
   testEnvironment: 'node',
   globals: {

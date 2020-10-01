@@ -1,5 +1,4 @@
-import {TPromiseResponse, IObjSuccessOrError, ISyncReturn} from 'src/types';
-import sync from 'src/sync';
+import sync, {TPromiseResponse, IObjSuccessOrError, ISyncReturn} from 'src/sync';
 
 const mockPromiseError = jest.fn<TPromiseResponse, any>(() => new Promise ((_, reject) => {
   setTimeout(() => {

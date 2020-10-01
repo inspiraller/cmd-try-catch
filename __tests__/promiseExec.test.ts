@@ -1,5 +1,5 @@
 
-import { IObjSuccessOrError, TResolveFunc} from 'src/types';
+import { IObjSuccessOrError, TResolveFunc} from 'src/sync';
 import promiseExec, { handleExecOut } from 'src/promiseExec';
 
 type IObjSuccessOrErrorVoid = IObjSuccessOrError | void;

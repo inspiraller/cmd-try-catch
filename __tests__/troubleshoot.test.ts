@@ -1,8 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { exec } from 'child_process';
-
-import { ISyncReturn, TFunc } from 'src/types';
-import sync from 'src/sync';
+import sync, { ISyncReturn, TFunc } from 'src/sync';
 import { urlExistPromiseAsObject } from './utils/urlExistPromise';
 
 let objReturn: ISyncReturn;

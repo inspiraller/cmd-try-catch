@@ -1,5 +1,5 @@
 import urlExist from 'url-exist';
-import { TPromiseResponse } from 'src/types';
+import { TPromiseResponse } from 'src/sync';
 
 type TConstructError = (url: string) =>  string;
 const constructError: TConstructError = url => `url: "${url}" does not exist`;

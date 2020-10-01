@@ -1,4 +1,4 @@
-import { IObjCMD } from 'src/types';
+import { IObjCMD } from 'src/sync';
 
 type TStripMapToObject = (arr: IObjCMD[]) => IObjCMD[];
 

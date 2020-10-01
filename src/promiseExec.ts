@@ -1,5 +1,5 @@
 import { exec } from 'child_process';
-import { IObjError, IObjSuccess, THandleExecOut, TPromiseExec } from './types';
+import { IObjError, IObjSuccess, THandleExecOut, TPromiseExec } from './sync';
 
 import print from './print';
 

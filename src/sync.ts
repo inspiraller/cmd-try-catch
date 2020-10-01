@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { handleExecOut } from './promiseExec';
 import { handleFunc } from './promiseFunc';
+import * as types from './types';
 
 import {
   IObjCMD,
@@ -16,31 +17,6 @@ import {
 
 import chalk from 'chalk';
 import print from './print';
-
-
-// #########################################################################################
-// code
-
-// const defaultExecOptions: ExecOptions = {
-// shell: 'customProcess.env.ComSpec', // from options in exec, or /bin/sh in unix
-
-// Troubleshoot: - Error: spawn .env.ComSpec ENOENT
-// https://stackoverflow.com/questions/38458118/nodejs-error-spawn-c-windows-system32-cmd-exe-enoent
-// cwd: path.resolve(__dirname, '../') //'./',
-
-// https://maxschmitt.me/posts/error-spawn-node-enoent-node-js-child-process/
-// env: {
-//   NODE_ENV: process.env.NODE_ENV,
-//   PATH: process.env.PATH
-// }
-
-// };
-// const defaultSpawnOptions: SpawnOptions = {
-//   stdio: 'ignore', // 'inherit',
-//   shell: true,
-//   cwd: './',
-//   detached: true
-// };
 
 /* istanbul ignore next */
 const printTryCatch = (isTry: boolean, arr: IObjCMD[], len: number, msg: string) => {
@@ -222,6 +198,8 @@ sync = async arrNext => {
   };
 };
 
-export { syncTry, syncCatch, catchProcess };
+export { syncTry, syncCatch, catchProcess, types };
+
+export * from './types';
 
 export default sync;

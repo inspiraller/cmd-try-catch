@@ -1,5 +1,4 @@
-import { ISyncReturn } from 'src/types';
-import sync from 'src/sync';
+import sync, { ISyncReturn } from 'src/sync';
 import stripMap from './utils/stripMap';
 
 let objReturn: ISyncReturn;

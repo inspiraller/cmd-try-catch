@@ -9,7 +9,7 @@ import {
   TPromiseResponse,
   THandleFuncResult,
   THandleFuncAsPromise
-} from './types';
+} from './sync';
 
 export const handleFuncAsResult: THandleFuncResult = (objCMD, result, resolve, reject) => {
   try {
