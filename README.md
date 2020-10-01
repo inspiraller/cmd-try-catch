@@ -2,12 +2,69 @@
 This repository enables the ability to provide an array of commands with catch alternatives
 
 # The reason for this library
-- I want to supply an array of commands that run in sequence, one after the other. 
+- I want to supply an array of commands that run in sequence, one after the other.
 - If one of those commands fail then I want to try a series of catch commands.
 - If the catch command fails, then move onto the next catch command. If that catch command succeeds then retry the original command.
 - If the original command passes, then move onto the next top command, otherwise stop the entire sequence.
 - If the original command fails again, then try any remaining untried catch commands. If there are no more catch commands, then stop the sequence.
 - If all commands in the top list pass then return a success response.
+
+# Working example
+**package.json**
+```javascript
+{
+  "name": "interact-cmd-try-catch",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cmd-try-catch": "^2.0.0",
+    "got": "^11.7.0"
+  }
+}
+```
+
+**index.js**
+```javascript
+const util = require('util');
+const sync = require('cmd-try-catch').default;
+const got = require('got');
+
+const urlExistPromise = url =>
+  new Promise (async (resolve, reject) => {
+    await got(url).then(() => {
+      resolve({
+        success: url
+      });
+    }).catch(() => {
+      reject({
+        error: Error(`url: "${url}" does not exist`)
+      })
+    })
+  });
+
+const init = async () => {
+  const objReturn = await sync([
+    {
+      func: async () => await urlExistPromise('http://localhost/tutorial'),
+      catch: [{
+        troubleshoot: /url\:\s\"http\:\/\/localhost\/tutorial\"\sdoes\snot\sexist/,
+        cmd: `docker run -d -p 80:80 --name mydocker docker/getting-started`
+      }]
+    }
+  ]);
+  console.log('objReturn= ', util.inspect(objReturn, true, 4));
+}
+
+init();
+```
 
 **example:**
 ```typescript
@@ -15,7 +72,7 @@ import sync, {stripMap} from 'sync';
 
 const objResult = sync([{
   // 1 try command1Try, 5 try again
-  cmd: 'command1Try', 
+  cmd: 'command1Try',
   catch: [{
      // 2 commandTry1 fails so try this
     cmd: 'command1Catch1'
@@ -24,11 +81,11 @@ const objResult = sync([{
     cmd: 'command1Catch2'
   }, {
      // 4 command1Catch2 fails so try this
-    cmd: 'echo catchSuccess' // This succeeds so retry command1Try. 
+    cmd: 'echo catchSuccess' // This succeeds so retry command1Try.
   }, {
      // 6 command1Try fails so try this
     cmd: 'another error'
-  }, 
+  },
    // 7 no more catch commands to try, so end sequence
   ]
 }, {
@@ -38,15 +95,15 @@ const objResult = sync([{
 
 const isAllPass = objResult.isComplete;
 
-const getMapOfPasses = stripMap(objResult.map) 
+const getMapOfPasses = stripMap(objResult.map)
 /*
 getMapOfPasses = [
   {
-    complete: false, 
+    complete: false,
     catch: [{
-      complete: false 
+      complete: false
     }, {
-      complete: false 
+      complete: false
     }, {
       complete: true
     }, {
@@ -106,7 +163,7 @@ const objResult = sync([{
   catch: [{
     func: funcError,
   }, {
-    func: funcPromiseError, 
+    func: funcPromiseError,
   }, {
     func: funcPromiseSuccess,
   }]
