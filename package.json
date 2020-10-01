@@ -1,7 +1,8 @@
 {
   "name": "cmd-try-catch",
-  "version": "2.0.0",
-  "description": "cmd try catch",
+  "version": "2.0.1",
+  "description": "cmd try catch - provides the ability for developers to provide a series of commands and troubleshoot catch alternatives.",
+  "keywords": ["cmd", "exec", "promise"],
   "author": "Steve Tomlin",
   "main": "dist/src/sync.js",
   "license": "MIT",
