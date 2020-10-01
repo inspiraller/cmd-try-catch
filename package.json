@@ -4,7 +4,7 @@
   "description": "cmd try catch",
   "author": "Steve Tomlin",
   "main": "src/sync.js",
-  "licence": "MIT",
+  "license": "MIT",
   "files": [
     "dist/**/*"
   ],
