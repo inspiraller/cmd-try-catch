@@ -65,7 +65,44 @@ const init = async () => {
 
 init();
 ```
+# outputs 
+```shell
+npm run start
 
+> interact-cmd-try-catch@1.0.0 start c:\node_all\interact-cmd-try-catch
+> node index.js
+
+
+1: func
+
+CATCH: docker run -d -p 80:80 --name mydocker docker/getting-started
+
+1: func
+objReturn=  {
+  map: [
+    {
+      func: [AsyncFunction: func] {
+        [length]: 0,
+        [name]: 'func',
+        [Symbol(Symbol.toStringTag)]: 'AsyncFunction'
+      },
+      catch: [
+        {
+          troubleshoot: /url\:\s\"http\:\/\/localhost\/tutorial\"\sdoes\snot\sexist/,
+          cmd: 'docker run -d -p 80:80 --name mydocker docker/getting-started',
+          complete: [Object]
+        },
+        [length]: 1
+      ],
+      complete: { success: 'http://localhost/tutorial' }
+    },
+    [length]: 1
+  ],
+  isComplete: true
+}
+```
+
+# Providing a series of commands
 **example:**
 ```typescript
 import sync, {stripMap} from 'sync';
