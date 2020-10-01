@@ -1,5 +1,6 @@
 import { handleExecOut } from 'src/promiseExec';
-import { TError, IObjCMD, TSTDOut, TExecOut, TFunc, ISyncReturn } from 'src/types';
+import { getResolveWithoutObj, getRejectWithoutObj } from 'src/promiseFunc';
+import { TError, IObjCMD, TSTDOut, TExecOut, TFunc, ISyncReturn, IObjError, IObjSuccess } from 'src/types';
 import sync, { customProcess, getPosOfLen, catchProcess, syncTry, shallowCloneArrObjCMD } from 'src/sync';
 
 // troubleshoot - testing:
@@ -38,7 +39,9 @@ describe('utils', () => {
       ];
       const intNextLen: number = arrNext.length;
       const intCatchLen: number = arrCatch.length;
-      const result: boolean | void = await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor: 0 });
+      const errErrorOrObj = { error: Error('some error')};
+      const result: boolean | void = await catchProcess({ arrNext, intNextLen, arrCatch, 
+        intCatchLen, errErrorOrObj });
       expect(result).toBe(true);
     });
     it('should fail catch if no arrCatch exists', async () => {
@@ -46,8 +49,9 @@ describe('utils', () => {
       const arrCatch: IObjCMD[] = [];
       const intNextLen: number = arrNext.length;
       const intCatchLen: number = arrCatch.length;
+      const errErrorOrObj = { error: Error('some error')};
 
-      await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor: 0 })
+      await catchProcess({ arrNext, intNextLen, arrCatch, intCatchLen, errErrorOrObj })
         .then(() => {
           expect(true).toBe(false); // should not get here, and if it does - show error
         })
@@ -236,5 +240,27 @@ describe('utils', () => {
       }];
       expect(shallowCloneArrObjCMD(obj)).toEqual(obj);
     });
-  })
+  });
+  describe('getRejectWithoutObj', () => {
+    it('should extract error from object', () => {
+      const error: IObjError['error'] = Error('some error');
+      const objError: IObjError = { error };
+      expect(getRejectWithoutObj(objError)).toEqual(error);
+    });
+    it('should just return error', () => {
+      const error: IObjError['error'] = Error('some error');
+      expect(getRejectWithoutObj(error)).toEqual(error);
+    });
+  });
+  describe('getResolveWithoutObj', () => {
+    it('should extract success from object', () => {
+      const success: IObjSuccess['success'] = 'success';
+      const objSuccess: IObjSuccess = { success };
+      expect(getResolveWithoutObj(objSuccess)).toEqual(success);
+    });
+    it('should just return success', () => {
+      const success: IObjSuccess['success'] = 'success';
+      expect(getResolveWithoutObj(success)).toEqual(success);
+    });
+  });
 });

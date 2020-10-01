@@ -1,5 +1,9 @@
-import { IObjSuccess, IObjError, THandleFunc } from './types';
 import {
+  IObjSuccess,
+  IObjError,
+  THandleFunc,
+  TObjOrError,
+  TObjOrSuccess,
   IExecOutput,
   IObjSuccessOrError,
   TPromiseResponse,
@@ -13,19 +17,16 @@ export const handleFuncAsResult: THandleFuncResult = (objCMD, result, resolve, r
       const objSuccess: IObjSuccess = result as IObjSuccess;
       objCMD.complete = objSuccess;
       resolve(objSuccess);
-
     } else if (result.error) {
       const objError: IObjError = result as IObjError;
       objCMD.complete = objError;
       reject(objError);
-
     } else {
       const objError: IObjError = {
         error: Error('You have not supplied a success or error response in your function.')
       };
       objCMD.complete = objError;
       reject(objError);
-  
     }
   } catch (err) {
     /* istanbul ignore next */
@@ -39,15 +40,28 @@ export const handleFuncAsResult: THandleFuncResult = (objCMD, result, resolve, r
   }
 };
 
+export const getResolveWithoutObj = (success: TObjOrSuccess): IObjSuccess['success'] =>
+  typeof success === 'string' || Buffer.isBuffer(success) || !success ? success : success.success;
+
+export const getRejectWithoutObj = (err: TObjOrError): IExecOutput['error'] =>
+  err instanceof Error || !err ? err : err.error;
+
 export const handleFuncAsPromise: THandleFuncAsPromise = (objCMD, response, resolve, reject) => {
   response
     .then(result => {
-      objCMD.complete = result;
-      resolve(result);
+      const success: IObjSuccess['success'] = getResolveWithoutObj(result);
+      const objSuccess: IObjSuccess = {
+        success
+      };
+      objCMD.complete = objSuccess;
+      resolve(objSuccess);
     })
-    .catch((err: IExecOutput['error']) => {
-      const objError: IObjError = { error: err };
-      objCMD.complete = objError
+    .catch((err: TObjOrError) => {
+      const error: IExecOutput['error'] = getRejectWithoutObj(err);
+      const objError: IObjError = {
+        error
+      };
+      objCMD.complete = objError;
       reject(objError);
     });
 };

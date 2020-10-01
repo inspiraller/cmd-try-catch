@@ -1,21 +1,38 @@
 import urlExist from 'url-exist';
 import { TPromiseResponse } from 'src/types';
 
-type TUrlExistPromise = (url: string) => TPromiseResponse;
+type TConstructError = (url: string) =>  string;
+const constructError: TConstructError = url => `url: "${url}" does not exist`;
 
-const urlExistPromise: TUrlExistPromise = async url =>
+type TUrlExistPromiseAsObject = (url: string) => TPromiseResponse;
+const urlExistPromiseAsObject: TUrlExistPromiseAsObject = async url =>
   await new Promise (async (resolve, reject) => {
     const exist: boolean = await urlExist(url);
     if (exist) {
       resolve({
-        success:  url
+        success:  'true'
       });
     } else {
       reject({
-        error: Error(`url: "${url}" does not exist`)
+        error: Error(constructError(url))
       })
     }
   });
+
+type TUrlExistPromise = (url: string) => Promise<boolean>;
+const urlExistPromise: TUrlExistPromise = async url =>
+  await new Promise (async (resolve, reject) => {
+    const exist: boolean = await urlExist(url);
+    if (exist) {
+      resolve(true);
+    } else {
+      reject(Error(constructError(url)))
+    }
+  });
+
+export {
+  urlExistPromiseAsObject
+};
 
 export default urlExistPromise;
 

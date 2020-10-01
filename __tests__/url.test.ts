@@ -1,8 +1,8 @@
 import { ISyncReturn , TFunc } from 'src/types';
 import sync from 'src/sync';
-import urlExistPromise from './utils/urlExistPromise';
+import { urlExistPromiseAsObject } from './utils/urlExistPromise';
 
-const getUrlDockerTutorial: TFunc = async () => await urlExistPromise('http://localhost/tutorial');
+const getGoogleUrl: TFunc = async () => await urlExistPromiseAsObject('http://www.google.com');
 
 let objReturn: ISyncReturn;
 
@@ -10,11 +10,11 @@ describe('sync - urlExistPromise', () => {
   beforeAll(async () => {
     objReturn = await sync([
       {
-        func: getUrlDockerTutorial
+        func: getGoogleUrl
       }
     ]);
   });
-  it('should not complete', () => {
-    expect(objReturn.isComplete).toBe(false);
+  it('should complete - if this fails then its because your internet is down!', () => {
+    expect(objReturn.isComplete).toBe(true);
   });
 });

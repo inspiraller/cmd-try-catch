@@ -11,7 +11,7 @@ import {
   TGetMsg,
   TSync,
   TSyncTry,
-  TSyncCatch
+  TSyncCatch, IObjError
 } from './types';
 
 import chalk from 'chalk';
@@ -92,15 +92,15 @@ let syncTry: TSyncTry;
 let catchProcess: TSyncCatch;
 let syncCatch: TSyncCatch;
 
-catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor }) => {
-  const isCatch = intCatchCursor < arrCatch.length;
+catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen, errErrorOrObj }) => {
+  const isCatch = arrCatch.length;
   if (isCatch) {
     const handleCatch = await syncCatch({
       arrNext,
       intNextLen,
       arrCatch,
       intCatchLen,
-      intCatchCursor
+      errErrorOrObj
     });
     return handleCatch;
   }
@@ -109,27 +109,51 @@ catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCurs
   return false;
 };
 
-syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor }) => {
+type TGetTroubleshootCursor = (arrCatch: IObjCMDCatch[], strError: string) => number;
+const getTroubleshootCursor: TGetTroubleshootCursor = (arrCatch, strError: string) => 
+  arrCatch.findIndex(objCMD => {
+      const troubleshoot = objCMD.troubleshoot || null;
+      return troubleshoot && strError.search(troubleshoot) !== -1;
+    });
+
+type TGetCatchAny =  (arrCatch: IObjCMDCatch[]) => number;
+const getCatchAny: TGetCatchAny = arrCatch => 
+  arrCatch.findIndex((objCMD: IObjCMDCatch) => 
+    objCMD.complete === undefined
+  );
+
+type TGetCatchCursor = (arrCatch: IObjCMDCatch[], errErrorOrObj: IObjError) => number;   
+const getCatchCursor: TGetCatchCursor = (arrCatch, errErrorOrObj) => {
+  const strError: string = String(errErrorOrObj.error);
+  const intTroubleshootInd: number = getTroubleshootCursor(arrCatch, strError);
+  return (intTroubleshootInd === -1) ? getCatchAny(arrCatch) : intTroubleshootInd;
+}
+
+syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen, errErrorOrObj }) => {
+
+  const intCatchCursor: number = getCatchCursor(arrCatch, errErrorOrObj); 
+  if (intCatchCursor === -1) {
+    return false; // auto catch in catchProcess above - ! Cannot continue ! no more catches
+  }
   const strMsg = getMsg(arrCatch[intCatchCursor]);
 
   /* istanbul ignore next */
   printTryCatch(false, arrCatch, intCatchLen || 0, strMsg);
 
-  const objCMD = arrCatch[intCatchCursor];
-  intCatchCursor += 1;
-  // const isCatchNext = intCatchCursor < arrCatch.length;
+
+  const objCMD = arrCatch.slice(intCatchCursor, intCatchCursor + 1)[0];
 
   const catchAll = await customProcess(objCMD)
     .then(() => {
       return true;
     })
-    .catch(async () => {
+    .catch(async err2 => {
       const catchEach = await catchProcess({
         arrNext,
         intNextLen,
         arrCatch,
         intCatchLen,
-        intCatchCursor
+        errErrorOrObj: err2
       });
       return catchEach;
     });
@@ -139,10 +163,10 @@ syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen, intCatchCursor 
 type TGetNext = (arrNext: IObjCMD[], intNextCursor: number) => boolean;
 const getNext: TGetNext = (arrNext, intNextCursor) => intNextCursor < arrNext.length;
 
-type TGetCatchCursor = (arrCatch: IObjCMDCatch[]) => number;
-const getCatchCursor: TGetCatchCursor = arrCatch => (
-  arrCatch && arrCatch.length && arrCatch.findIndex((objCMD: IObjCMDCatch) => objCMD.complete === undefined)
-);
+// type TGetCatchCursor = (arrCatch: IObjCMDCatch[]) => number;
+// const getCatchCursor: TGetCatchCursor = arrCatch => (
+//   arrCatch && arrCatch.length && arrCatch.findIndex((objCMD: IObjCMDCatch) => objCMD.complete === undefined)
+// );
 
 syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
   const strMsg = getMsg(arrNext[intNextCursor]);
@@ -157,7 +181,6 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
   }
   const arrCatch = objCMD.catch;
   const intCatchLen = (arrCatch && arrCatch.length) || 0;
-  const intCatchCursor = getCatchCursor(arrCatch || []);
 
   const tryAll = await customProcess(objCMD)
     .then(async () => {
@@ -167,8 +190,8 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
       }
       return true;
     })
-    .catch(async () => {
-      if ((!arrCatch || !arrCatch.length) || intCatchCursor === -1) {
+    .catch(async errErrorOrObj => {
+      if (!arrCatch || !arrCatch.length) {
         return false;
       }
       const catchAll = await catchProcess({
@@ -176,7 +199,7 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
         intNextLen,
         arrCatch,
         intCatchLen,
-        intCatchCursor
+        errErrorOrObj
       });
 
       if (catchAll) {
@@ -186,7 +209,6 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
       return false;
     });
   return tryAll;
-  // return new Promise((resolve, reject) => resolve(true));
 };
 
 sync = async arrNext => {

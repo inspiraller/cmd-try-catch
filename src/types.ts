@@ -28,6 +28,9 @@ export type THandleExecOut = (
 export type TPromiseExec = (objCMD: IObjCMDExec, opt?: ExecOptions) => TPromiseResponse;
 
 /* promiseFunc */
+
+export type TObjOrError = IExecOutput['error'] | IObjError;
+export type TObjOrSuccess = IObjSuccess['success'] | IObjSuccess;
 export type TFunc = () => IObjSuccessOrError | TPromiseResponse;
 export type THandleFunc = (objCMD: IObjCMDFunc, resolve: TResolveFunc, reject: TRejectFunc) => void;
 export type THandleFuncResult = (
@@ -91,10 +94,10 @@ interface ISyncTry extends ISync {
 }
 
 interface ISyncCatch extends ISync {
-  intCatchCursor: number;
   intNextLen: number;
   arrCatch: IObjCMD[];
   intCatchLen: number;
+  errErrorOrObj: IObjError;
 }
 
 export type TSync = (arrNext: ISync['arrNext']) => Promise<ISyncReturn>;
