@@ -4,3 +4,4 @@ reports
 sonarqube-7.1
 .scannerwork
 package-lock.json
+dist

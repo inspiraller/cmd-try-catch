@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "cmd try catch",
   "author": "Steve Tomlin",
-  "main": "src/sync.js",
+  "main": "dist/src/sync.js",
   "license": "MIT",
   "files": [
     "dist/**/*"
