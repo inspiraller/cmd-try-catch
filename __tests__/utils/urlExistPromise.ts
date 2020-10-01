@@ -1,4 +1,6 @@
-import urlExist from 'url-exist';
+
+import urlExist from './urlExist';
+
 import { TPromiseResponse } from 'src/sync';
 
 type TConstructError = (url: string) =>  string;

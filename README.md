@@ -169,3 +169,12 @@ describe('sync - usecase', () => {
   });
 });
 ```
+
+# Licence
+This particular npm package I have provided MIT licence but please note that the dependencies of this package are variable.
+Some are Apache-2.0, BSD, BSD-2-Clause, BSD-3-Clause, BSD*, CC-BY-3.0,  CC-BY-4.0, CC0-1.0, ISC, GPL, LGPL-3.0, MIT, WTFPL, UNLICENCED and so forth. They may change. Please be aware if using this under any commercial practice that it may break some of those licences and you hold your own liability.
+
+This package uses those licences to provide working solution example.
+Please contact me if you wish to contract me and I maybe able to minimize this project to reduce any liability of those dependent licences.
+
+Enjoy

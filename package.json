@@ -3,8 +3,8 @@
   "version": "2.0.0",
   "description": "cmd try catch",
   "author": "Steve Tomlin",
-  "private": true,
   "main": "src/sync.js",
+  "licence": "MIT",
   "files": [
     "dist/**/*"
   ],
@@ -23,8 +23,8 @@
   ],
   "dependencies": {
     "@types/uuid": "^8.3.0",
+    "got": "^11.7.0",
     "nodemon": "^1.18.4",
-    "url-exist": "^2.0.2",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
