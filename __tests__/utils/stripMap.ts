@@ -2,14 +2,13 @@ import { IObjCMD } from 'src/sync';
 
 type TStripMapToObject = (arr: IObjCMD[]) => IObjCMD[];
 
-const stripMapToObject: TStripMapToObject = arr => (
+const stripMapToObject: TStripMapToObject = arr =>
   arr.reduce((accum, curr) => {
     const catchme: IObjCMD[] = (curr.catch && stripMapToObject(curr.catch)) || [];
     const objCMD: IObjCMD = { complete: curr.complete, catch: catchme };
     accum.push(objCMD);
     return accum;
-  }, [] as IObjCMD[])
-);
+  }, [] as IObjCMD[]);
 
 interface IObjCMDCompleteBool {
   complete: boolean | null;
@@ -24,14 +23,17 @@ const getCompleteAsBool: TComplete = complete => {
   if (!complete) {
     return null;
   }
-  return complete.success ? true: false;
+  return complete.success ? true : false;
 };
 
 type TStripMap = (arr: IObjCMD[], isCmd?: boolean) => IObjCMDCompleteBool[];
-const stripMap: TStripMap = (arr, isCmd) => (
+const stripMap: TStripMap = (arr, isCmd) =>
   arr.reduce((accum, curr) => {
     const catchme: IObjCMDCompleteBool[] = (curr.catch && stripMap(curr.catch, isCmd)) || [];
-    const objCMD: IObjCMDCompleteBool = { complete: getCompleteAsBool(curr.complete), catch: catchme };
+    const objCMD: IObjCMDCompleteBool = {
+      complete: getCompleteAsBool(curr.complete),
+      catch: catchme
+    };
     if (isCmd) {
       if (curr.cmd) {
         objCMD.cmd = curr.cmd;
@@ -41,8 +43,7 @@ const stripMap: TStripMap = (arr, isCmd) => (
     }
     accum.push(objCMD);
     return accum;
-  }, [] as IObjCMDCompleteBool[])
-);
+  }, [] as IObjCMDCompleteBool[]);
 // ###################################################
 // output example - simple:
 
@@ -102,9 +103,6 @@ const map = stripMap(objReturn.map, isCnd) ===
 
 */
 
-
-export {
-  stripMapToObject
-};
+export { stripMapToObject };
 
 export default stripMap;

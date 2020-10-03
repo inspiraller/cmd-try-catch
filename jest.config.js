@@ -1,6 +1,6 @@
 module.exports = {
   roots: ['<rootDir>', '<rootDir>/src', '<rootDir>/__tests__'],
-  testTimeout: 10000,
+  testTimeout: 20000,
   transform: {
     '.js': 'babel-jest',
     '.ts': 'ts-jest'
@@ -31,7 +31,7 @@ module.exports = {
       }
     ]
   ],
-  coveragePathIgnorePatterns: ['node_modules', 'print.ts'],
+  coveragePathIgnorePatterns: ['node_modules', 'print.ts', 'dist'],
   collectCoverageFrom: ['src/*.{t,j}s', 'src/**/*.{t,j}s'],
   coverageThreshold: {
     global: {

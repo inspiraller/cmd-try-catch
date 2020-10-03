@@ -6,17 +6,23 @@ import * as types from './types';
 import {
   IObjCMD,
   IObjCMDCatch,
-  IObjCMDFunc, 
+  IObjCMDFunc,
   IObjCMDExec,
   TProcess,
   TGetMsg,
   TSync,
   TSyncTry,
-  TSyncCatch, IObjError
+  TSyncCatch,
+  IObjError
 } from './types';
 
 import chalk from 'chalk';
 import print from './print';
+
+// let time1: number;
+// let time2: number;
+// let time3: number;
+// let time4: number;
 
 /* istanbul ignore next */
 const printTryCatch = (isTry: boolean, arr: IObjCMD[], len: number, msg: string) => {
@@ -34,7 +40,8 @@ const printTryCatch = (isTry: boolean, arr: IObjCMD[], len: number, msg: string)
 export const getPosOfLen = (arr: IObjCMD[], len: number): string =>
   arr.length ? `${len - (arr.length - 1)}` : String(len);
 
-export const shallowCloneArrObjCMD = (arrNext: IObjCMD[]) =>
+type TshallowCloneArrObjCMD = (arrNext: IObjCMD[]) => IObjCMD[];
+export const shallowCloneArrObjCMD: TshallowCloneArrObjCMD = arrNext =>
   arrNext.reduce((accum, current) => {
     let objCMD: IObjCMD = current;
     if (current.catch) {
@@ -63,12 +70,13 @@ export const customProcess: TProcess = (objCMD, opt = {}) =>
     }
   });
 
-let sync: TSync;
-let syncTry: TSyncTry;
-let catchProcess: TSyncCatch;
-let syncCatch: TSyncCatch;
-
-catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen, errErrorOrObj }) => {
+const catchProcess: TSyncCatch = async ({
+  arrNext,
+  intNextLen,
+  arrCatch,
+  intCatchLen,
+  errErrorOrObj
+}) => {
   const isCatch = arrCatch.length;
   if (isCatch) {
     const handleCatch = await syncCatch({
@@ -86,28 +94,31 @@ catchProcess = async ({ arrNext, intNextLen, arrCatch, intCatchLen, errErrorOrOb
 };
 
 type TGetTroubleshootCursor = (arrCatch: IObjCMDCatch[], strError: string) => number;
-const getTroubleshootCursor: TGetTroubleshootCursor = (arrCatch, strError: string) => 
+const getTroubleshootCursor: TGetTroubleshootCursor = (arrCatch, strError: string) =>
   arrCatch.findIndex(objCMD => {
-      const troubleshoot = objCMD.troubleshoot || null;
-      return troubleshoot && strError.search(troubleshoot) !== -1;
-    });
+    const troubleshoot = objCMD.troubleshoot || null;
+    return troubleshoot && strError.search(troubleshoot) !== -1;
+  });
 
-type TGetCatchAny =  (arrCatch: IObjCMDCatch[]) => number;
-const getCatchAny: TGetCatchAny = arrCatch => 
-  arrCatch.findIndex((objCMD: IObjCMDCatch) => 
-    objCMD.complete === undefined
-  );
+type TGetCatchAny = (arrCatch: IObjCMDCatch[]) => number;
+const getCatchAny: TGetCatchAny = arrCatch =>
+  arrCatch.findIndex((objCMD: IObjCMDCatch) => objCMD.complete === undefined);
 
-type TGetCatchCursor = (arrCatch: IObjCMDCatch[], errErrorOrObj: IObjError) => number;   
+type TGetCatchCursor = (arrCatch: IObjCMDCatch[], errErrorOrObj: IObjError) => number;
 const getCatchCursor: TGetCatchCursor = (arrCatch, errErrorOrObj) => {
-  const strError: string = String(errErrorOrObj.error);
+  const strError = String(errErrorOrObj.error);
   const intTroubleshootInd: number = getTroubleshootCursor(arrCatch, strError);
-  return (intTroubleshootInd === -1) ? getCatchAny(arrCatch) : intTroubleshootInd;
-}
+  return intTroubleshootInd === -1 ? getCatchAny(arrCatch) : intTroubleshootInd;
+};
 
-syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen, errErrorOrObj }) => {
-
-  const intCatchCursor: number = getCatchCursor(arrCatch, errErrorOrObj); 
+const syncCatch: TSyncCatch = async ({
+  arrNext,
+  intNextLen,
+  arrCatch,
+  intCatchLen,
+  errErrorOrObj
+}) => {
+  const intCatchCursor: number = getCatchCursor(arrCatch, errErrorOrObj);
   if (intCatchCursor === -1) {
     return false; // auto catch in catchProcess above - ! Cannot continue ! no more catches
   }
@@ -115,7 +126,6 @@ syncCatch = async ({ arrNext, intNextLen, arrCatch, intCatchLen, errErrorOrObj }
 
   /* istanbul ignore next */
   printTryCatch(false, arrCatch, intCatchLen || 0, strMsg);
-
 
   const objCMD = arrCatch.slice(intCatchCursor, intCatchCursor + 1)[0];
 
@@ -144,7 +154,7 @@ const getNext: TGetNext = (arrNext, intNextCursor) => intNextCursor < arrNext.le
 //   arrCatch && arrCatch.length && arrCatch.findIndex((objCMD: IObjCMDCatch) => objCMD.complete === undefined)
 // );
 
-syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
+const syncTry: TSyncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
   const strMsg = getMsg(arrNext[intNextCursor]);
   /* istanbul ignore next */
   printTryCatch(true, arrNext, intNextLen, strMsg);
@@ -158,15 +168,28 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
   const arrCatch = objCMD.catch;
   const intCatchLen = (arrCatch && arrCatch.length) || 0;
 
+  //       // test time
+  // time2 = new Date().getTime();
+  // console.log('before then = ', objCMD, (time2 - time1) / 1000);
+
   const tryAll = await customProcess(objCMD)
     .then(async () => {
+      //
+      // // test time
+      // time3 = new Date().getTime();
+      // console.log('first then = ', (time3 - time1) / 1000);
+
       if (getNext(arrNext, intNextCursor + 1)) {
-        const next = await syncTry({ arrNext, intNextLen, intNextCursor: intNextCursor + 1});
+        const next = await syncTry({ arrNext, intNextLen, intNextCursor: intNextCursor + 1 });
         return next;
       }
       return true;
     })
     .catch(async errErrorOrObj => {
+      // test time
+      // time4 = new Date().getTime();
+      // console.log('first catch = ', (time4 - time1) / 1000);
+
       if (!arrCatch || !arrCatch.length) {
         return false;
       }
@@ -184,14 +207,18 @@ syncTry = async ({ arrNext, intNextLen, intNextCursor }) => {
       }
       return false;
     });
+
   return tryAll;
 };
 
-sync = async arrNext => {
+const sync: TSync = async arrNext => {
+  // time1 = new Date().getTime();
   const cloneArrNext = shallowCloneArrObjCMD(arrNext);
+
   const intNextCursor = 0;
   const intNextLen = cloneArrNext.length;
   const isComplete = await syncTry({ arrNext: cloneArrNext, intNextLen, intNextCursor });
+
   return {
     map: cloneArrNext,
     isComplete

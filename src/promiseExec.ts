@@ -15,6 +15,7 @@ export const handleExecOut: THandleExecOut = (objCMD, resolve, reject) => (
     reject({ error });
   } else {
     const objSuccess: IObjSuccess = { success: stdout || stderr };
+    print(String(stdout), 'green');
     objCMD.complete = objSuccess;
     resolve(objSuccess);
   }

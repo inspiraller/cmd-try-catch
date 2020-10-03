@@ -1,20 +1,24 @@
 /* shared */
 export type TError = import('child_process').ExecException | null;
-export type ExecOptions =  import('child_process').ExecOptions;
+export type ExecOptions = import('child_process').ExecOptions;
 
 export type TSTDOut = string | Buffer;
 export type TExecOut = (error: TError, stdout: TSTDOut, stderr: TSTDOut) => void;
 
-export interface IExecOutput { 
+export interface IExecOutput {
   success?: TSTDOut;
   error?: TError;
 }
 
-export interface IObjSuccess {success: IExecOutput['success']}
-export interface IObjError {error: IExecOutput['error']}
+export interface IObjSuccess {
+  success: IExecOutput['success'];
+}
+export interface IObjError {
+  error: IExecOutput['error'];
+}
 
 export type TResolveFunc = (value: IObjSuccess) => void;
-export type TRejectFunc= (value: IObjError) => void;
+export type TRejectFunc = (value: IObjError) => void;
 
 export type TPromiseResponse = Promise<IObjSuccess>;
 
@@ -51,13 +55,13 @@ export type THandleFuncAsPromise = (
 export interface IObjCMDFunc {
   msg?: string;
   func: TFunc;
-  complete?: IObjSuccessOrError
+  complete?: IObjSuccessOrError;
 }
 
 export interface IObjCMDExec {
   msg?: string;
   cmd: string;
-  complete?: IObjSuccessOrError
+  complete?: IObjSuccessOrError;
 }
 
 export interface IObjCMD {
@@ -65,11 +69,11 @@ export interface IObjCMD {
   cmd?: string;
   func?: IObjCMDFunc['func'];
   catch?: IObjCMDCatch[];
-  complete?: IObjSuccessOrError
+  complete?: IObjSuccessOrError;
 }
 
 export interface IObjCMDCatch extends IObjCMD {
-  troubleshoot?: string | RegExp
+  troubleshoot?: string | RegExp;
 }
 
 export interface IObjSuccessOrError {
@@ -84,7 +88,7 @@ interface ISync {
 export type ISyncReturn = {
   isComplete: boolean;
   map: IObjCMD[];
-}
+};
 
 interface ISyncTry extends ISync {
   intNextCursor: number;

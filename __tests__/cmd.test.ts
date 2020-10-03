@@ -16,7 +16,7 @@ describe('sync - cmd', () => {
       expect(objReturn.isComplete).toBe(false);
     });
     it('map response should match', () => {
-      expect(stripMap(objReturn.map)).toMatchObject([{complete: false}]);
+      expect(stripMap(objReturn.map)).toMatchObject([{ complete: false }]);
     });
   });
   describe('error - success, error', () => {
@@ -39,14 +39,19 @@ describe('sync - cmd', () => {
       expect(objReturn.isComplete).toBe(false);
     });
     it('map response should match', () => {
-      expect(stripMap(objReturn.map)).toMatchObject([{
-        complete: false, // gets retried
-        catch: [{
-          complete: true
-        }]
-      }, {
-        complete: null
-      }]);
+      expect(stripMap(objReturn.map)).toMatchObject([
+        {
+          complete: false, // gets retried
+          catch: [
+            {
+              complete: true
+            }
+          ]
+        },
+        {
+          complete: null
+        }
+      ]);
     });
   });
   describe(' success, error - error', () => {
@@ -72,16 +77,22 @@ describe('sync - cmd', () => {
       expect(objReturn.isComplete).toBe(false);
     });
     it('map response should match', () => {
-      expect(stripMap(objReturn.map)).toMatchObject([{
-        complete: true,
-      }, {
-        complete: false,
-        catch: [{
-          complete: false
-        }]
-      }, {
-        complete: null
-      }]);
+      expect(stripMap(objReturn.map)).toMatchObject([
+        {
+          complete: true
+        },
+        {
+          complete: false,
+          catch: [
+            {
+              complete: false
+            }
+          ]
+        },
+        {
+          complete: null
+        }
+      ]);
     });
   });
   describe('success', () => {

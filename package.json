@@ -1,8 +1,12 @@
 {
   "name": "cmd-try-catch",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "cmd try catch - provides the ability for developers to provide a series of commands and troubleshoot catch alternatives.",
-  "keywords": ["cmd", "exec", "promise"],
+  "keywords": [
+    "cmd",
+    "exec",
+    "promise"
+  ],
   "author": "Steve Tomlin",
   "main": "dist/src/sync.js",
   "license": "MIT",
@@ -24,7 +28,9 @@
   ],
   "dependencies": {
     "@types/uuid": "^8.3.0",
+    "cmd-try-catch": "^2.0.2",
     "got": "^11.7.0",
+    "http": "^0.0.1-security",
     "nodemon": "^1.18.4",
     "uuid": "^8.3.0"
   },
@@ -57,7 +63,7 @@
     "eslint-config-prettier": "^6.9.0",
     "eslint-import-resolver-babel-module": "^5.1.2",
     "eslint-loader": "^4.0.2",
-    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jest": "^23.18.2",
     "eslint-plugin-prettier": "^3.1.2",
     "immutable": "^4.0.0-rc.12",
@@ -79,6 +85,6 @@
     "start-tsnode": "cross-env NODE_ENV=development nodemon -r 'index.ts' --exec 'ts-node' index.ts -e ts,tsx ts-node/register",
     "start-babel": "cross-env NODE_ENV=development nodemon index.ts --exec babel-node --extensions '.ts,.tsx' index.ts",
     "start": "npm run start-babel",
-    "testurl": "cross-env NODE_ENV=development nodemon testurl.ts --exec babel-node --extensions '.ts,.tsx' testurl.ts"
+    "test-package": "cross-env NODE_ENV=development nodemon test-package.ts --exec babel-node --extensions '.ts,.tsx' test-package.js"
   }
 }

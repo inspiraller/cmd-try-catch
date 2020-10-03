@@ -1,45 +1,42 @@
-import sync, {TPromiseResponse, IObjSuccessOrError, ISyncReturn} from 'src/sync';
+import sync, { TPromiseResponse, IObjSuccessOrError, ISyncReturn } from 'src/sync';
 
-const mockPromiseError = jest.fn<TPromiseResponse, any>(() => new Promise ((_, reject) => {
-  setTimeout(() => {
-    reject({
-      error: Error('mockPromiseError')
-    });
-  }, 700);
+const mockPromiseError = jest.fn<TPromiseResponse, any>(
+  () =>
+    new Promise((_, reject) => {
+      setTimeout(() => {
+        reject({
+          error: Error('mockPromiseError')
+        });
+      }, 700);
+    })
+);
+
+const mockPromiseSuccess = jest.fn<TPromiseResponse, any>(
+  () =>
+    new Promise(resolve => {
+      setTimeout(() => {
+        resolve({
+          success: 'mockPromiseSuccess'
+        });
+      }, 700);
+    })
+);
+
+const mockSuccess1 = jest.fn<IObjSuccessOrError, any>(() => ({
+  success: 'mockSuccess1'
 }));
 
-const mockPromiseSuccess = jest.fn<TPromiseResponse, any>(() =>  new Promise (resolve => {
-  setTimeout(() => {
-    resolve({
-      success: 'mockPromiseSuccess'
-    });
-  }, 700);
+const mockSuccess2 = jest.fn<IObjSuccessOrError, any>(() => ({
+  success: 'mockSuccess2'
 }));
 
+const mockError1 = jest.fn<IObjSuccessOrError, any>(() => ({
+  error: Error('mockError1')
+}));
 
-const mockSuccess1 = jest.fn<IObjSuccessOrError, any>(() => (
-  {
-    success: 'mockSuccess1'
-  }
-));
-
-const mockSuccess2 = jest.fn<IObjSuccessOrError, any>(() => (
-  {
-    success: 'mockSuccess2'
-  }
-));
-
-const mockError1 = jest.fn<IObjSuccessOrError, any>(() => (
-  {
-    error: Error('mockError1')
-  }
-));
-
-const mockError2 = jest.fn<IObjSuccessOrError, any>(() => (
-  {
-    error: Error('mockError2')
-  }
-));
+const mockError2 = jest.fn<IObjSuccessOrError, any>(() => ({
+  error: Error('mockError2')
+}));
 
 const obj: IObjSuccessOrError = {
   error: Error('mockError1')
@@ -47,16 +44,13 @@ const obj: IObjSuccessOrError = {
 
 delete obj.error;
 
-const mockFuncNoSuccesOrError = jest.fn<IObjSuccessOrError, any>(() => (
-  obj
-));
-
+const mockFuncNoSuccesOrError = jest.fn<IObjSuccessOrError, any>(() => obj);
 
 let objReturn: ISyncReturn;
 
 describe('sync - func', () => {
   describe('error', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -72,7 +66,7 @@ describe('sync - func', () => {
     });
   });
   describe('Promise - error', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -88,7 +82,7 @@ describe('sync - func', () => {
     });
   });
   describe('error - success, error', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -118,7 +112,7 @@ describe('sync - func', () => {
     });
   });
   describe('success, error - error', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -154,7 +148,7 @@ describe('sync - func', () => {
     });
   });
   describe('handleFunc - unexpected error', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -170,7 +164,7 @@ describe('sync - func', () => {
     });
   });
   describe('success', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -186,7 +180,7 @@ describe('sync - func', () => {
     });
   });
   describe('Promise - success', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -202,7 +196,7 @@ describe('sync - func', () => {
     });
   });
   describe('success, success', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -224,7 +218,7 @@ describe('sync - func', () => {
     });
   });
   describe('success, error - success', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
@@ -254,7 +248,7 @@ describe('sync - func', () => {
     });
   });
   describe('error - success, success', () => {
-    beforeAll( async() => {
+    beforeAll(async () => {
       jest.clearAllMocks();
       objReturn = await sync([
         {
